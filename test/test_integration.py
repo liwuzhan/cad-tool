@@ -1,6 +1,7 @@
 """Integration tests for the full CLI workflow"""
 
 import pytest
+import os
 import subprocess
 import sys
 import json
@@ -97,9 +98,11 @@ def test_commit_creates_artifacts(test_dir):
     artifacts = package / "artifacts" / commit_hash
     assert (artifacts / "model.step").exists()
     assert (artifacts / "metrics.json").exists()
-    # At least one thumbnail
-    thumbnails = list(artifacts.glob("thumb_*.png"))
-    assert len(thumbnails) > 0
+    # Headless CI can explicitly skip the optional PNG preview layer while
+    # still testing geometry, STEP, metrics, validation, and version history.
+    if os.environ.get("CAD_SKIP_RENDER", "").strip().lower() not in {"1", "true", "yes", "on"}:
+        thumbnails = list(artifacts.glob("thumb_*.png"))
+        assert len(thumbnails) > 0
 
 
 def test_log_shows_history(test_dir):

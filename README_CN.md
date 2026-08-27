@@ -74,6 +74,10 @@ codex plugin add cad-tool@cad-tool
 dsh plugin --profile <profile> add -w dsh-cad-studio
 ```
 
+在平台渲染器无法生成 PNG 的无头自动化环境中，可设置
+`CAD_SKIP_RENDER=1`。提交仍会完成几何检查并保存 STEP、指标、验证结果和版本
+历史，只跳过缩略图。
+
 ### 一键安装
 
 ```bash

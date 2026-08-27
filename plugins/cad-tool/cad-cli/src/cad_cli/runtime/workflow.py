@@ -1,6 +1,7 @@
 """Build workflow orchestrator for v2"""
 
 from datetime import datetime
+import os
 from pathlib import Path
 from typing import Optional, TYPE_CHECKING
 
@@ -128,7 +129,12 @@ class BuildWorkflow:
 
         # Step 5: Render thumbnails
         manifest = self.package.get_manifest()
-        if render_views is None:
+        render_disabled = os.environ.get("CAD_SKIP_RENDER", "").strip().lower() in {
+            "1", "true", "yes", "on"
+        }
+        if render_disabled:
+            render_views = []
+        elif render_views is None:
             render_views = manifest.render.get("default_views", ["iso"])
 
         thumbnails_created = []

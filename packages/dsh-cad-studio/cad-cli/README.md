@@ -40,6 +40,10 @@ local pack with:
 dsh plugin --profile <profile> add -w dsh-cad-studio
 ```
 
+For headless automation where the platform renderer cannot create PNGs, set
+`CAD_SKIP_RENDER=1`. Commits still execute geometry checks and save STEP,
+metrics, validation results, and version history; only thumbnails are skipped.
+
 ### One-line install
 
 ```bash
