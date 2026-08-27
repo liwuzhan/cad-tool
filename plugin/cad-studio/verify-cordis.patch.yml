@@ -1,0 +1,9 @@
+# 真机 cordis 验证 patch：headless 组合里临时补动态 Cordis 运行时与工具，
+# 再挂 cad-studio（Client 半件语法/形状校验用；浏览器激活仍需 web UI）。
+- insert:
+    - id: cordis-runner
+      name: '@deepseek-ai/dsh-cordis-host-runner'
+    - id: tool-cordis
+      name: '@deepseek-ai/dsh-tool-cordis'
+    - id: cad-studio
+      name: /Users/liwuzhan/Desktop/cad tools v2/plugin/cad-studio/cad-studio-plugin.mjs

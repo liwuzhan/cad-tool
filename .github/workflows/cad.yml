@@ -1,0 +1,71 @@
+name: cad
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  python:
+    name: pytest (${{ matrix.os }}, py${{ matrix.python }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-14, python: "3.12" }
+          - { os: macos-14, python: "3.14" }
+          - { os: ubuntu-24.04, python: "3.12" }
+          - { os: ubuntu-24.04, python: "3.13" }
+          - { os: windows-2022, python: "3.12" }
+          - { os: windows-2022, python: "3.13" }
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - name: Install CAD CLI
+        run: pip install -e ".[dev]"
+      - name: Run test suite
+        run: pytest test/ -q
+
+  plugin:
+    name: plugin-syntax-client-tarballs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax-check plugin modules
+        run: |
+          node --check plugin/cad-studio/cad-studio-plugin.mjs
+          node --check plugin/cad-studio/cad-studio-client.mjs
+      - name: Build browser client bundle
+        run: node packages/dsh-cad-client/build.mjs
+      - name: Verify generated bundle syntax
+        run: node --check packages/dsh-cad-client/lib/client.js
+      - name: Mount and render client toolviews
+        run: node plugin/cad-studio/test-client.mjs
+      - name: Pack and install npm tarballs
+        run: node packages/test-tarballs.mjs
+
+  lock-smoke:
+    name: package-lock-smoke (ubuntu)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install CAD CLI (lock harness needs python3 + cad_cli)
+        run: pip install -e .
+      - name: Run package lock harness
+        run: node plugin/cad-studio/test-lock.mjs

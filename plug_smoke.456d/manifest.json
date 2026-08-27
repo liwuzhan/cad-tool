@@ -1,0 +1,26 @@
+{
+  "name": "插件冒烟测试块",
+  "version": "2.0.0",
+  "created": "2026-08-16T21:07:54.471068",
+  "head": "a52ab574488a",
+  "branches": {
+    "main": "a52ab574488a"
+  },
+  "current_branch": "main",
+  "artifact_policy": "latest_per_branch",
+  "unit": "mm",
+  "timeout_seconds": 60,
+  "render": {
+    "default_views": [
+      "top",
+      "front",
+      "right",
+      "iso"
+    ],
+    "image_format": "png",
+    "resolution": [
+      800,
+      600
+    ]
+  }
+}

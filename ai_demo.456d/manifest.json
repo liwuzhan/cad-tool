@@ -1,0 +1,26 @@
+{
+  "name": "bearing_housing_project",
+  "version": "2.0.0",
+  "created": "2026-02-01T18:00:48.400131",
+  "head": "5a1f4fed",
+  "branches": {
+    "main": "5a1f4fed"
+  },
+  "current_branch": "main",
+  "artifact_policy": "latest_per_branch",
+  "unit": "mm",
+  "timeout_seconds": 60,
+  "render": {
+    "default_views": [
+      "top",
+      "front",
+      "right",
+      "iso"
+    ],
+    "image_format": "png",
+    "resolution": [
+      800,
+      600
+    ]
+  }
+}

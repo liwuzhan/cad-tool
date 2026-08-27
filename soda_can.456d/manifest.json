@@ -1,0 +1,26 @@
+{
+  "name": "罐装可乐易拉罐",
+  "version": "2.0.0",
+  "created": "2026-08-17T03:05:31.168132",
+  "head": "8ce20d580379",
+  "branches": {
+    "main": "8ce20d580379"
+  },
+  "current_branch": "main",
+  "artifact_policy": "latest_per_branch",
+  "unit": "mm",
+  "timeout_seconds": 60,
+  "render": {
+    "default_views": [
+      "top",
+      "front",
+      "right",
+      "iso"
+    ],
+    "image_format": "png",
+    "resolution": [
+      800,
+      600
+    ]
+  }
+}

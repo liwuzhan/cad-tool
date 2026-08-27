@@ -1,0 +1,14 @@
+{
+  "valid": false,
+  "errors": [
+    {
+      "file": "",
+      "line": 0,
+      "type": "NonManifold",
+      "code": "E-BREP",
+      "message": "Shape is non-manifold (contains self-intersections or overlapping geometry)",
+      "hint": "Check that all boolean operations completed successfully"
+    }
+  ],
+  "timestamp": "2026-08-27T11:13:30.878629"
+}

@@ -1,0 +1,9 @@
+# CAD 工场 bundle patch：向宿主组合插入 Host 工具插件与 Client 预览插件。
+# Client 包由 dsh-client-modules 依据 package.json 的 `dsh.client` 声明自动
+# 投递到浏览器（platform: web），这里只需一行 Host loader entry。
+- insert:
+    - id: cad-studio-tools
+      name: '@deepseek-ai/dsh-cad-tools'
+
+    - id: cad-studio-client
+      name: '@deepseek-ai/dsh-cad-client'

@@ -1,0 +1,26 @@
+{
+  "name": "合金五辐轮毂",
+  "version": "2.0.0",
+  "created": "2026-08-27T10:52:26.670011",
+  "head": "9a970f6b21d4",
+  "branches": {
+    "main": "9a970f6b21d4"
+  },
+  "current_branch": "main",
+  "artifact_policy": "latest_per_branch",
+  "unit": "mm",
+  "timeout_seconds": 60,
+  "render": {
+    "default_views": [
+      "top",
+      "front",
+      "right",
+      "iso"
+    ],
+    "image_format": "png",
+    "resolution": [
+      800,
+      600
+    ]
+  }
+}

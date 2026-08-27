@@ -1,0 +1,43 @@
+{
+  "name": "@deepseek-ai/dsh-cad-client",
+  "description": "CAD \u5de5\u573a Client \u63d2\u4ef6\uff1a16 \u4e2a cad_* \u5de5\u5177\u7684 CADPreviewNode \u5de5\u5177\u5361\uff08\u6e32\u67d3\u56fe\u7f51\u683c/metrics/Checkpoint\uff09",
+  "version": "0.1.0-alpha.1",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "license": "MIT",
+  "dsh": {
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-tool",
+        "@deepseek-ai/dsh-client-ui-conversation"
+      ]
+    }
+  },
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-client-runtime": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-client-ui-tool": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-client-ui-conversation": "^0.1.0-rc.6"
+  },
+  "scripts": {
+    "build": "node build.mjs"
+  }
+}

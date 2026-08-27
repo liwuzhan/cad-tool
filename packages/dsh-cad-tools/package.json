@@ -1,0 +1,22 @@
+{
+  "name": "@deepseek-ai/dsh-cad-tools",
+  "description": "CAD \u5de5\u573a Host \u63d2\u4ef6\uff1aP1 CadRuntime + P2 16 \u4e2a cad_* \u5efa\u6a21/\u7248\u672c\u7ba1\u7406\u5de5\u5177",
+  "version": "0.1.0-alpha.1",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1"
+  }
+}

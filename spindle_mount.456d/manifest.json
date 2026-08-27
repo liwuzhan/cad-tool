@@ -1,0 +1,27 @@
+{
+  "name": "Spindle Mount",
+  "version": "2.0.0",
+  "created": "2026-02-01T17:26:42.254245",
+  "head": "1965655c",
+  "branches": {
+    "main": "b47e1fea",
+    "bearing_housing": "1965655c"
+  },
+  "current_branch": "bearing_housing",
+  "artifact_policy": "latest_per_branch",
+  "unit": "mm",
+  "timeout_seconds": 60,
+  "render": {
+    "default_views": [
+      "top",
+      "front",
+      "right",
+      "iso"
+    ],
+    "image_format": "png",
+    "resolution": [
+      800,
+      600
+    ]
+  }
+}

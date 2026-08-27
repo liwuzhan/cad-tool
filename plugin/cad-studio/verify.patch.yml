@@ -1,0 +1,4 @@
+# 临时验证 patch：insert 新条目（绝对路径）到 headless 组合根层。
+- insert:
+    - id: cad-studio
+      name: /Users/liwuzhan/Desktop/cad tools v2/plugin/cad-studio/cad-studio-plugin.mjs

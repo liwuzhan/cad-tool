@@ -1,0 +1,22 @@
+{
+  "name": "@deepseek-ai/dsh-cad-preset",
+  "description": "CAD \u5de5\u573a Agent Preset\uff08preset.yml + agent.cordis.yml + skills + tool-bootstrap\uff09\uff0c\u5b89\u88c5\u5230 ~/.dsh/.agent-presets/cad-studio",
+  "version": "0.1.0-alpha.1",
+  "type": "module",
+  "license": "MIT",
+  "files": [
+    "preset.yml",
+    "agent.cordis.yml",
+    "tool-bootstrap.mjs",
+    "skills/**",
+    "install.mjs",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "install": "node install.mjs"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-cad-tools": "0.1.0-alpha.1"
+  }
+}

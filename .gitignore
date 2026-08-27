@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+sdist/
+var/
+wheels/
+*.egg-info/
+installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Test caches
+.pytest_cache/
+.coverage
+htmlcov/
+
+# CAD outputs (generated geometry files)
+*.step
+*.stp
+*.stl
+*.obj
+
+# Model package runtime state (artifacts' JSON/thumbs ARE tracked)
+*.456d/runlog/
+*.456d/.deps/
+*.456d/.cad-lock
+*.456d/.cad-lock.*
+
+# Local-only directories
+backups/
+reference/
+nul
+my_first_cad/
+START_HERE.md
+
+# Sister repo in the same workspace (managed by its own git)
+/cad-parts/
+
+# Plugin harness temp dirs
+.cad-smoke-*/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

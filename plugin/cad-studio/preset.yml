@@ -1,0 +1,3 @@
+name: CAD 工场
+description: 在标准编码 Agent 之上增加 cad_* 工具，驱动 build123d 参数化建模、Checkpoint 数值验证、.456d 模型包版本管理与离线渲染，完成 design.md → main.py → run → validate → review → commit 的完整 CAD 工作流。
+order: 6
