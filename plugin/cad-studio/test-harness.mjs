@@ -7,7 +7,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import plugin from "./cad-studio-plugin.mjs";
 
-const ws = mkdtempSync(join(process.cwd(), ".cad-smoke-"));
+// Keep generated packages outside the repository. Some development hosts sync
+// the workspace with rsync and can resurrect a just-deleted .cad-lock, which
+// tests the synchronizer rather than the plugin's lock lifecycle.
+const ws = mkdtempSync(join(tmpdir(), "cad-smoke-"));
 const toolDefs = new Map();
 const fakeSession = { header: { cwd: ws }, id: "test-session" };
 const fakeAgent = { session: fakeSession };
@@ -176,6 +179,7 @@ result = part.part
   const badRun = await call("cad_run", { package: init.package.path, script: badPy });
   if (badRun.ok !== false || !badRun.error) throw new Error("bad script should fail with error");
   if ("metrics" in badRun) throw new Error("failed run must omit metrics key (null leaks into schema)");
+  if (existsSync(join(init.package.path, ".cad-lock"))) throw new Error("failed run leaked package lock");
 
   // 6. validate (script path: no HEAD yet) + commit
   const val = await call("cad_validate", { package: init.package.path, script: mainPy });
@@ -210,6 +214,31 @@ result = part.part
   const review = await call("cad_review", { package: init.package.path, views: ["iso", "front"] });
   if (!review.ok || review.features.length !== 3) throw new Error("review failed: " + JSON.stringify(review.error));
   if (!review.preview || review.preview.length !== 2 || !review.preview.every((p) => p.dataUrl)) throw new Error("review preview missing");
+  const currentReview = readFileSync(review.reviewTemplate, "utf8");
+
+  // 11b. model-directed annotated review of an immutable commit. This adds
+  // evidence without checking out or changing the model.
+  const annotated = await call("cad_review", {
+    package: init.package.path,
+    commit: commit.commit.hash,
+    views: ["front"],
+    drawing: {
+      schema: "cad.review-drawing/v1",
+      title: "Targeted diagnostic",
+      views: [{
+        name: "front_width",
+        view: "front",
+        dimensions: [{ from: [-50, 0, -15], to: [50, 0, -15], offset_mm: -10 }],
+        callouts: [{ at: [0, 0, 0], text: "center", offset_mm: [8, 8] }],
+      }],
+    },
+  });
+  if (!annotated.ok || annotated.drawings.length !== 1) throw new Error("annotated review failed");
+  if (annotated.sourceCommit !== commit.commit.hash) throw new Error("annotated review commit mismatch");
+  if (!annotated.reviewTemplate.startsWith(join(init.package.path, "runlog"))) throw new Error("commit review should stay in runlog");
+  if (readFileSync(review.reviewTemplate, "utf8") !== currentReview) throw new Error("commit review changed current review template");
+  if (!existsSync(annotated.drawings[0].png_path) || !existsSync(annotated.drawings[0].svg_path)) throw new Error("annotated outputs missing");
+  if (!annotated.preview.some((p) => p.label === "drawing:front_width" && p.dataUrl)) throw new Error("annotated preview missing");
 
   // 12. export step + stl
   const exp = await call("cad_export", { package: init.package.path, format: "step", output: join(ws, "out.step") });

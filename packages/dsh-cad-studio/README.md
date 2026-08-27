@@ -3,7 +3,8 @@
 Self-contained DSH plugin for the CAD Tool workflow. One install supplies:
 
 - 16 Host tools covering environment setup, `.456d` packages, modeling,
-  validation, inspection, rendering, versioning, and STEP/STL export;
+  validation, inspection, ordinary multi-view review, optional model-directed
+  dimensions/cutaways, versioning, and STEP/STL export;
 - the browser-side CAD result cards;
 - the complete Python `cad-cli` source used by the environment bootstrapper.
 

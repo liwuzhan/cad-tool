@@ -29,7 +29,7 @@ cad-studio/
 | 包 | `cad_pkg_list` / `cad_init` | — / `cad init` | 包列表 / 创建卡 |
 | 建模 | `cad_run` / `cad_validate` / `cad_inspect` | 同名 | **Checkpoint 图 + metrics** |
 | 版本 | `cad_commit` / `cad_log` / `cad_status` / `cad_checkout` / `cad_branch` | 同名 | **commit 缩略图 + metrics** |
-| 输出 | `cad_render` / `cad_review` / `cad_export` / `cad_artifact` | 同名 | **多视图 PNG 网格** |
+| 输出 | `cad_render` / `cad_review` / `cad_export` / `cad_artifact` | 同名 | **多视图 + 可选标注/剖切 PNG** |
 
 ## 安装
 
@@ -74,7 +74,7 @@ dsh --profile headless --patch cad-studio.verify.patch.yml \
 - **CLI runner**：`ctx.subprocess.spawn`（collect stdio + spill + `graceMs` + `exec.signal` 取消）；写入类命令经 `ctx.sandbox.confine` + `ctx.sandboxPolicy.resolve({session})` 按会话策略约束；argv 全数组化，不拼 shell。
 - **JSONL 规范化**：事件去 `ts`、保留 `event/payload`；Checkpoint 摘取为 `{name,event,passed,total,image,state,checks}`；metrics 与 `*_error.hint` 结构化返回；原始事件落 `<package>/runlog/<tag>_<ts>.jsonl`。
 - **presentationMeta**：`cad_run`/`cad_commit`/`cad_render`/`cad_review` 投影
-  `{kind, ok, metrics, checkpoints, preview}` 到 `tool/result` 事件的 `meta` 字段；
+  `{kind, ok, metrics, checkpoints, drawings, preview}` 到 `tool/result` 事件的 `meta` 字段；
   `preview[]` 里 ≤200KB 的 PNG 以 dataUrl 内联，供 Client 渲染网格。
 - **错误契约**：CLI 非零退出 → `{ok:false, error:{code,message,hint}}`；仅基础设施错误（subprocess 服务缺失、沙箱后端不可用、spawn 失败）throw 进入 isError 通道。
 - **路径边界**：模型包、脚本、导出目标均必须位于会话工作区内（越界返回 `E-PATH`）。

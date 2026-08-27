@@ -13,6 +13,7 @@ AI-Native CAD Command Line Tool with Model Packages (.456d)
 5. **Artifact Management** - Configurable cleanup policies for managing storage
 6. **Assembly Packages** - `kind=assembly`, multi-solid validation, aggregate metrics, and component-aware headless PNGs
 7. **Optional Standard Parts** - Progressive `cadparts` catalog queries and reusable assembly proxies
+8. **Model-Directed Review Drawings** - Optional dimensions, callouts, hidden lines, and cutaway views without changing the model
 
 ### Migration from v1.0
 
@@ -119,6 +120,10 @@ cad init bearing_block --name="Bearing block assembly" --kind assembly
 The assembly workflow keeps components as labeled `Compound` children and allows
 multiple valid solids. See [`docs/assembly_workflow.md`](docs/assembly_workflow.md)
 for coordinate, interface, standard-parts, validation, and review conventions.
+If an ordinary multi-view review reveals an ambiguous area, use the optional
+annotated drawing input described in
+[`docs/review_drawing.md`](docs/review_drawing.md). It generates evidence only;
+it is not a mandatory gate or an automatic design verdict.
 
 This creates:
 ```
@@ -156,6 +161,16 @@ cad validate
 cad inspect --prop=volume
 cad inspect --prop=bounds
 ```
+
+For an issue that cannot be localized from the ordinary views, ask for selected
+dimensions, callouts, or a cutaway without changing the source model:
+
+```bash
+cad review --commit <hash> --drawing-spec review-request.json
+```
+
+The request format and neutral measurement output are documented in
+[`docs/review_drawing.md`](docs/review_drawing.md).
 
 ### 4. Commit Your Work
 

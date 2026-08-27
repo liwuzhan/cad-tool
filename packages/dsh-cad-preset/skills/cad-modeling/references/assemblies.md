@@ -13,6 +13,7 @@
 | 创建装配包 | `cad_init(kind="assembly")` | `cad init <path> --name <name> --kind assembly` |
 | 执行与校验 | `cad_run`、`cad_validate`、`cad_inspect` | `cad run`、`cad validate`、`cad inspect` |
 | 视觉审查 | `cad_review`、`cad_render` | `cad review`、`cad render` |
+| 疑点定位 | `cad_review(drawing=...)` | `cad review --drawing-spec ...` |
 | 固化与输出 | `cad_commit`、`cad_export` | `cad commit`、`cad export` |
 
 标准件目录采用渐进式读取：
@@ -106,6 +107,10 @@ result = assembly
 5. 用 `cad inspect` 核对聚合体积、面积、包络和 `solid_count`。
 6. 渲染正、右、俯、轴测图；同时查看标准件自身的接口标注 PNG。
 7. 核对每个标准件的采购描述和 selection，再 commit/export。
+
+普通多视图无法定位已经发现的疑点时，再读取
+[`review_drawing.md`](review_drawing.md)，由模型指定少量尺寸、标注或剖面。该能力不是固定
+审查步骤；它只增加观察证据，不自动报警、判定或修改装配体。
 
 轴与轴承孔、螺栓与通孔等合法配合可能共享或接触名义表面。当前版本尚无带豁免表的自动干涉
 检查，不要把简单的两两求交体积当成最终判据。先在 `design.md` 明确配合关系，再审查非配合件

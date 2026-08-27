@@ -1336,7 +1336,7 @@ export default {
     // ─────────────────────────────────────────────────────────────────────
     define(
       "cad_review",
-      "执行脚本并生成视觉审查：渲染多视图 PNG + 生成 review.md 模板 + 返回 metrics/Checkpoint/面类型摘要。",
+      "生成视觉审查：默认渲染多视图 PNG；发现疑点时可用 drawing 按需添加尺寸、标注或剖切。审查图只提供证据，不作合格判定或修改模型。",
       {
         type: "object",
         properties: {
@@ -1344,6 +1344,11 @@ export default {
           package: { type: "string" },
           views: { type: "array", items: { type: "string" } },
           text_only: { type: "boolean", description: "跳过渲染，仅生成文本审查（非多模态模型用）" },
+          commit: { type: "string", description: "可选 commit hash；提供后直接审查该版本 STEP，不执行当前脚本" },
+          drawing: {
+            ...freeObject,
+            description: "可选 cad.review-drawing/v1 说明；模型指定视图、尺寸端点、标注与剖切，不应作为普通审查的强制步骤",
+          },
         },
         required: [],
       },
@@ -1355,12 +1360,14 @@ export default {
             ok: { type: "boolean" },
             metrics: metricsSchema,
             images: { type: "array", items: freeObject },
+            drawings: { type: "array", items: freeObject },
             features: { type: "array", items: { type: "string" } },
             checkpoints: { type: "array", items: freeObject },
             faceTypes: freeObject,
             preview: { type: "array", items: freeObject },
             reviewTemplate: { type: "string" },
             textOnly: { type: "boolean" },
+            sourceCommit: { type: "string" },
             events: { type: "array", items: eventSchema },
             error: errorSchema,
           },
@@ -1375,44 +1382,57 @@ export default {
           ok: !!v.ok,
           metrics: v.metrics || null,
           images: v.images || [],
+          drawings: v.drawings || [],
           preview: v.preview || [],
           features: v.features || [],
           checkpoints: v.checkpoints || [],
           reviewTemplate: v.reviewTemplate || null,
           textOnly: !!v.textOnly,
+          sourceCommit: v.sourceCommit || null,
           error: v.error || null,
         }),
       },
       async (args, exec) => {
         const ws = workspaceOf(exec);
         const pkgDir = findPackageDir(ws, args.package);
-        const script = resolveScript(ws, pkgDir, args.script);
+        const script = args.commit ? null : resolveScript(ws, pkgDir, args.script);
         const py = resolvePython(ws);
         const views = list(args.views).filter((v) => ["top", "front", "right", "iso"].includes(String(v)));
         const argv = [...pythonArgs(py), "review"];
-        if (existsSync(script)) argv.push(script);
+        if (script && existsSync(script)) argv.push(script);
         if (views.length) argv.push("--views", views.join(","));
         if (args.text_only) argv.push("--text-only");
+        if (text(args.commit)) argv.push("--commit", text(args.commit));
+        if (args.drawing && typeof args.drawing === "object") {
+          argv.push("--drawing-spec-json", JSON.stringify(args.drawing));
+        }
         const lockDir = await acquirePackageLock(pkgDir, "cad_review", LOCK_TIMEOUT_MS, LOCK_STALE_MS);
         try {
           const r = await runCli("review", ws, argv, { session: sessionOf(exec), signal: combinedSignal(exec, 240000), cwd: pkgDir });
           const payload = r.events.find((e) => e.event === "review_ready");
           const p = payload ? payload.payload : {};
           const images = list(p.images);
+          const drawings = list(p.drawings);
           const preview = images
             .map((img) => imagePreview(text(img && img.path), text(img && img.view)))
+            .concat(drawings.map((drawing) => imagePreview(
+              text(drawing && drawing.png_path),
+              `drawing:${text(drawing && drawing.name)}`,
+            )))
             .filter(Boolean);
           return {
             ok: r.ok && !!payload,
             // metrics 缺失时键缺省而非 null（schema 为 object 型）
             ...(p.metrics ? { metrics: p.metrics } : {}),
             images,
+            drawings,
             features: list(p.features),
             checkpoints: list(p.checkpoint_results),
             faceTypes: p.face_types || {},
             preview,
             reviewTemplate: text(p.review_template),
             textOnly: !!p.text_only,
+            ...(text(p.source_commit) ? { sourceCommit: text(p.source_commit) } : {}),
             events: r.events,
             ...(r.ok && payload ? {} : { error: r.error || { code: "E-REVIEW", message: "review_ready 缺失" } }),
           };

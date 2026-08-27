@@ -14,6 +14,7 @@ description: build123d 参数化零件与装配建模工作流。在 CAD 工场 
 | 标准件 | `cadparts search/compare/describe` | 通过当前平台 shell 渐进查询可选零件库 |
 | 建模 | `cad_run` | 执行 `src/main.py`（内存，不保存工件） |
 | 验证 | `cad_validate` / `cad_inspect` | BRep 有效性 / 体积面积边界框面数 |
+| 审查 | `cad_review` | 普通多视图；有疑点时可选 `drawing` 尺寸/标注/剖切 |
 | 版本 | `cad_commit` | 执行 + 验证 + STEP/缩略图/metrics + 历史记录 |
 
 工作区有多个 `.456d` 包时，所有工具都要用 `package` 参数明确指定。
@@ -21,6 +22,9 @@ description: build123d 参数化零件与装配建模工作流。在 CAD 工场 
 需求包含装配、多组件、机构或外购标准件时，先读取
 `references/assemblies.md`，并用 `cad_init(kind="assembly")` 创建装配包。
 单零件任务不要加载装配参考。
+
+普通三视图或轴测图已经足够时，不要额外生成标注图。只有已经发现疑点、但仍无法定位时，
+再读取 `references/review_drawing.md`，由模型主动指定少量尺寸、标注或剖面；工具不作质量判定。
 
 ## 标准流程
 

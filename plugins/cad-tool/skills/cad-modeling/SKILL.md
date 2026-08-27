@@ -104,6 +104,12 @@ before creating the package. Keep the main skill lightweight; the assembly
 reference contains the coordinate, interface, labeling, catalog, and validation
 conventions.
 
+Ordinary orthographic and isometric views are normally sufficient. If they
+reveal a concern that is still hard to localize, optionally read
+[references/review_drawing.md](references/review_drawing.md) and give `review`
+a model-chosen drawing specification for selected dimensions, callouts, or a
+cutaway. Do not make annotated drawings a mandatory step for simple work.
+
 ## Editing and recovery rules
 
 - Read JSONL events and act on `error.code`, `error.message`, and `error.hint`.
@@ -129,3 +135,5 @@ conventions.
   debugging feature-level assertions.
 - Read [references/assemblies.md](references/assemblies.md) only for assemblies,
   standard purchased parts, or multi-body layout work.
+- Read [references/review_drawing.md](references/review_drawing.md) only when
+  ordinary views have exposed an ambiguity that needs localized visual evidence.

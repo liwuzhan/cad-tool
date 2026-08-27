@@ -17,6 +17,10 @@ from .runtime.workflow import BuildWorkflow
 from .feedback.inspector import GeometryInspector
 from .feedback.exporter import ModelExporter
 from .feedback.renderer_v2 import OffscreenRendererV2
+from .feedback.review_drawing import (
+    load_drawing_spec,
+    render_review_drawings,
+)
 from .feedback.camera import STANDARD_VIEWS
 from .utils.jsonl import emit_event
 from .utils.geometry import compute_metrics
@@ -350,6 +354,7 @@ def _generate_review_template(
     checkpoint_results: list[dict] | None = None,
     geometry_summary: str = "",
     face_types: dict | None = None,
+    drawings: list[dict] | None = None,
     text_only: bool = False,
 ) -> None:
     """Generate review.md template with rich text data for both multimodal and text-only models.
@@ -368,6 +373,16 @@ def _generate_review_template(
             lines.append(f"- {img['view']}: `{img['path']}`\n")
     elif text_only:
         lines.append("\n> 文本模式：跳过渲染，基于数值数据进行审查\n")
+
+    if drawings:
+        lines.append("\n## 按需审查图\n\n")
+        lines.append("> 以下尺寸、标注和剖切由模型主动指定，只提供观察证据，不作合格判定。\n\n")
+        for drawing in drawings:
+            lines.append(
+                f"- {drawing['name']} ({drawing['view']}): "
+                f"PNG `{drawing['png_path']}` · SVG `{drawing['svg_path']}` · "
+                f"数据 `{drawing['json_path']}`\n"
+            )
 
     # --- 2. Geometry metrics ---
     lines.append(f"\n## 几何指标\n\n")
@@ -507,27 +522,47 @@ def _generate_review_template(
 @click.argument('script_path', type=click.Path(exists=True), required=False)
 @click.option('--views', default='iso,front,top,right')
 @click.option('--text-only', is_flag=True, help='Skip rendering, generate text-only review for non-multimodal models')
-def review(script_path, views, text_only):
-    """Execute script, render views, generate review template"""
+@click.option('--commit', 'commit_hash', help='Review an immutable commit STEP instead of executing the script')
+@click.option('--drawing-spec', type=click.Path(exists=True, path_type=Path), help='Optional JSON specification for annotated dimensions, callouts, or sections')
+@click.option('--drawing-spec-json', help='Inline JSON form of --drawing-spec')
+def review(script_path, views, text_only, commit_hash, drawing_spec, drawing_spec_json):
+    """Render ordinary views and optionally model-directed annotated drawings."""
     package = find_or_error()
 
-    if script_path:
-        script = Path(script_path)
-    else:
-        script = package.get_default_script()
-
-    emit_event("review_start", {"script": str(script), "text_only": text_only})
-
-    # 1. Execute script
-    executor = ScriptExecutorV2(package)
-    shape, error = executor.execute(script)
-    if error:
-        emit_event("review_error", {"error": error.to_dict()})
+    if commit_hash and script_path:
+        emit_event("review_error", {"message": "script_path and --commit are mutually exclusive"})
+        sys.exit(1)
+    if text_only and (drawing_spec or drawing_spec_json):
+        emit_event("review_error", {"message": "annotated drawings are unavailable with --text-only"})
+        sys.exit(1)
+    if drawing_spec and drawing_spec_json:
+        emit_event("review_error", {"message": "use only one drawing specification input"})
         sys.exit(1)
 
-    # 2. Checkpoint results (full payloads with state + checks)
-    features = executor.checkpoint_names
-    checkpoint_results = executor.checkpoint_results
+    script = Path(script_path) if script_path else package.get_default_script()
+    emit_event("review_start", {
+        "script": None if commit_hash else str(script),
+        "commit": commit_hash,
+        "text_only": text_only,
+        "annotated": bool(drawing_spec or drawing_spec_json),
+    })
+
+    # 1. Load an immutable STEP commit, or execute the current script.
+    if commit_hash:
+        shape, err_msg = _load_shape(package, commit_hash)
+        if shape is None:
+            emit_event("review_error", {"message": err_msg})
+            sys.exit(1)
+        features: list[str] = []
+        checkpoint_results: list[dict] = []
+    else:
+        executor = ScriptExecutorV2(package)
+        shape, error = executor.execute(script)
+        if error:
+            emit_event("review_error", {"error": error.to_dict()})
+            sys.exit(1)
+        features = executor.checkpoint_names
+        checkpoint_results = executor.checkpoint_results
 
     # 3. Metrics
     metrics = compute_metrics(shape)
@@ -552,8 +587,29 @@ def review(script_path, views, text_only):
             except Exception:
                 pass
 
-    # 6. Generate review.md
-    review_path = package.package_path / "review.md"
+    # 6. Optional, model-directed evidence. It never changes the source shape.
+    drawings: list[dict] = []
+    if drawing_spec or drawing_spec_json:
+        try:
+            spec = load_drawing_spec(path=drawing_spec, json_text=drawing_spec_json)
+            drawings = render_review_drawings(
+                shape,
+                spec,
+                package.runlog_dir,
+                source_commit=commit_hash,
+            )
+        except Exception as exc:
+            emit_event("review_error", {"message": str(exc)})
+            sys.exit(1)
+
+    # 7. Generate review.md
+    if commit_hash:
+        safe_commit = "".join(
+            character for character in commit_hash if character.isalnum() or character in "-_"
+        )[:64] or "commit"
+        review_path = package.runlog_dir / f"review_{safe_commit}.md"
+    else:
+        review_path = package.package_path / "review.md"
     _generate_review_template(
         review_path,
         rendered,
@@ -562,18 +618,21 @@ def review(script_path, views, text_only):
         checkpoint_results=checkpoint_results,
         geometry_summary=geometry_summary,
         face_types=face_types,
+        drawings=drawings,
         text_only=text_only,
     )
 
-    # 7. Output
+    # 8. Output
     emit_event("review_ready", {
         "metrics": metrics.to_dict(),
         "images": rendered,
         "features": features,
         "checkpoint_results": checkpoint_results,
         "face_types": {k: v for k, v in face_types.items() if k != "all_faces"},
+        "drawings": drawings,
         "review_template": str(review_path),
         "text_only": text_only,
+        "source_commit": commit_hash,
     })
 
 

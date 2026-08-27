@@ -23,6 +23,7 @@ CAD CLI 是一个让 AI（如 Claude）能够进行 CAD 建模的命令行工具
 2. **JSONL 输出**：所有命令返回机器可解析的 JSON，便于 AI 理解
 3. **版本控制**：类似 Git 的提交历史，可追溯设计变更
 4. **自包含包**：`.456d` 模型包包含代码、工件、历史的完整快照
+5. **模型主导审查**：普通三视图不能定位疑点时，可按需生成尺寸、标注和剖切图；工具不代替模型判定
 
 ### 核心架构
 
@@ -167,6 +168,16 @@ cad validate
 cad inspect --prop=volume
 cad inspect --prop=bounds
 ```
+
+普通三视图已经看出疑点、但无法确认具体位置时，可以对当前结果或某个 commit 请求带标注
+审查图，而不修改源码和 STEP：
+
+```bash
+cad review --commit <hash> --drawing-spec review-request.json
+```
+
+它不是强制流程，也不会输出合格判定。说明格式、尺寸读数和剖切约定见
+[`docs/review_drawing.md`](docs/review_drawing.md)。
 
 ### 4. 提交版本
 
