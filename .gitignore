@@ -35,10 +35,10 @@ htmlcov/
 *.obj
 
 # Model package runtime state (artifacts' JSON/thumbs ARE tracked)
-*.456d/runlog/
-*.456d/.deps/
-*.456d/.cad-lock
-*.456d/.cad-lock.*
+**/*.456d/runlog/
+**/*.456d/.deps/
+**/*.456d/.cad-lock
+**/*.456d/.cad-lock.*
 
 # Local-only directories
 backups/

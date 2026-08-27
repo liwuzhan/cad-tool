@@ -403,21 +403,41 @@ export default {
         cur = parent;
       }
       if (workspace.endsWith(".456d") && existsSync(join(workspace, "manifest.json"))) return workspace;
-      let hits = [];
-      try {
-        hits = readdirSync(workspace)
-          .filter((d) => d.endsWith(".456d") && existsSync(join(workspace, d, "manifest.json")))
-          .map((d) => join(workspace, d));
-      } catch { hits = []; }
+      const hits = listPackageDirs(workspace);
       if (hits.length === 1) return hits[0];
       if (hits.length > 1) {
+        const rel = (p) => (p.startsWith(workspace + sep) ? p.slice(workspace.length + 1) : p);
         throw new CadError(
           "E-AMBIGUOUS",
           `工作区内有 ${hits.length} 个 .456d 模型包，无法自动选定`,
-          `通过 package 参数指定其一: ${hits.map((p) => basename(p)).join(", ")}`,
+          `通过 package 参数指定其一: ${hits.map(rel).join(", ")}`,
         );
       }
       throw new CadError("E-NO-PACKAGE", "工作区内没有 .456d 模型包", "先调用 cad_init 创建模型包");
+    }
+
+    /** 扫描工作区内的 .456d 模型包（含一层归拢子目录，如 models/）。
+     *  返回绝对路径列表；跳过隐藏目录与 node_modules，不做更深递归。 */
+    function listPackageDirs(ws) {
+      const out = [];
+      const tryPush = (dir) => {
+        if (dir.endsWith(".456d") && existsSync(join(dir, "manifest.json"))) out.push(dir);
+      };
+      try {
+        const entries = readdirSync(ws, { withFileTypes: true });
+        for (const e of entries) {
+          if (!e.isDirectory()) continue;
+          const full = join(ws, e.name);
+          if (e.name.endsWith(".456d")) { tryPush(full); continue; }
+          if (e.name.startsWith(".") || e.name === "node_modules") continue;
+          try {
+            for (const s of readdirSync(full, { withFileTypes: true })) {
+              if (s.isDirectory()) tryPush(join(full, s.name));
+            }
+          } catch { /* unreadable subdir */ }
+        }
+      } catch { /* unreadable ws */ }
+      return out;
     }
 
     /** 脚本路径解析 + 工作区边界校验。 */
@@ -792,10 +812,12 @@ export default {
       async (args, exec) => {
         const ws = resolvePath(workspaceOf(exec), args.cwd);
         let dirs = [];
-        try { dirs = readdirSync(ws).filter((d) => d.endsWith(".456d") && existsSync(join(ws, d, "manifest.json"))); } catch { /* empty */ }
-        if (ws.endsWith(".456d") && existsSync(join(ws, "manifest.json"))) dirs = [basename(ws)];
-        const packages = dirs.map((d) => {
-          const dir = ws.endsWith(".456d") && d === basename(ws) ? ws : join(ws, d);
+        if (ws.endsWith(".456d") && existsSync(join(ws, "manifest.json"))) {
+          dirs = [ws];
+        } else {
+          dirs = listPackageDirs(ws); // 含一层归拢子目录（如 models/）
+        }
+        const packages = dirs.map((dir) => {
           let manifest = {};
           try { manifest = JSON.parse(readFileSync(join(dir, "manifest.json"), "utf8")); } catch { /* keep */ }
           return {
