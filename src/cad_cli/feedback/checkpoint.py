@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Optional, List, Any, Callable
 from pathlib import Path
 import json
+import os
 import tempfile
 
 if TYPE_CHECKING:
@@ -422,8 +423,13 @@ class Checkpoint:
             ]
         }
 
-        # 自动渲染（best-effort，失败不影响验证）
-        if render:
+        # 自动渲染（best-effort，失败不影响验证）。某些无显示环境会在
+        # VTK 内部直接段错误，无法由 Python try/except 捕获，因此允许部署层
+        # 显式关闭所有预览，同时保留完整的几何断言与 JSONL 结果。
+        render_disabled = os.environ.get("CAD_SKIP_RENDER", "").strip().lower() in {
+            "1", "true", "yes", "on"
+        }
+        if render and not render_disabled:
             image_path = _render_checkpoint_image(self.shape, self.name)
             if image_path:
                 payload["image"] = image_path
