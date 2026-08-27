@@ -195,11 +195,14 @@ export default {
       try { return exec && exec.agent ? exec.agent.session : undefined; } catch { return undefined; }
     };
 
-    /** 从工作区向上寻找 cad-cli 源码根（含 src/cad_cli/__main__.py）。 */
+    /** 从工作区向上寻找 cad-cli 源码根（含 src/cad_cli/__main__.py）。
+     *  候选顺序：显式 config.cliRoot → 插件目录内 vendored CLI（阶段 A：插件根/cad-cli；
+     *  阶段 B npm 包：包根/cad-cli，即 lib/ 的上级）→ 工作区向上（开发模式，用正在改的源码）。 */
     function locateCliRoot(workspace) {
       const candidates = [];
       if (config.cliRoot) candidates.push(resolve(PLUGIN_DIR, String(config.cliRoot)));
       candidates.push(join(PLUGIN_DIR, "cad-cli"));
+      candidates.push(join(PLUGIN_DIR, "..", "cad-cli")); // npm 包形态：lib/index.js 的上级
       let cur = workspace;
       while (true) {
         candidates.push(cur);

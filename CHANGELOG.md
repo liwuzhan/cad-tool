@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- 插件自包含：`@deepseek-ai/dsh-cad-tools` v0.1.0-alpha.2 vendored CLI（`cad-cli/`
+  随 npm 包分发，396KB）；`locateCliRoot` 支持 npm lib 形态（`PLUGIN_DIR/../cad-cli`），
+  无工作区源码的机器 bootstrap 也可直接 `pip install -e` 自带副本；新增
+  `packages/sync-vendor.sh` 发布前同步脚本（tarball 72KB / 55 个 py 实测通过）。
 - 一键安装：新增 `install.sh`（macOS/Linux）与 `install.ps1`（Windows）——探测
   Python 3.11–3.14 → 隔离 venv（默认仓库内 `.venv`，`INSTALL_VENV` 可覆盖并与
   DSH 插件共享）→ `pip install -e .` → 冒烟验证；README（中英）新增「AI 代装」
