@@ -18,6 +18,28 @@ v1.0 has been archived to `src/cad_cli/v1/`. No automatic migration is provided 
 
 ## Installation
 
+### Codex plugin
+
+```bash
+codex plugin marketplace add liwuzhan/cad-tool --ref main
+codex plugin add cad-tool@cad-tool
+```
+
+Start a new Codex session after installation. The plugin itself has no install
+hook; on the first real CAD request it checks the local runtime and asks before
+creating the isolated dependency environment.
+
+### DSH plugin package
+
+The self-contained storefront package is `packages/dsh-cad-studio`. It carries
+the 16 Host tools, browser result cards, and the complete Python CLI in one
+tarball. Until the marketplace entry is merged, install a release tarball or a
+local pack with:
+
+```bash
+dsh plugin --profile <profile> add -w dsh-cad-studio
+```
+
 ### One-line install
 
 ```bash

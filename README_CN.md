@@ -54,6 +54,26 @@ my_model.456d/                    # 模型包（自包含目录）
 
 ## 安装
 
+### Codex 插件
+
+```bash
+codex plugin marketplace add liwuzhan/cad-tool --ref main
+codex plugin add cad-tool@cad-tool
+```
+
+安装后新建 Codex 会话。插件安装本身不会执行下载脚本；第一次真正进行 CAD
+任务时，它会先检查本地环境，并在创建隔离依赖环境前请求确认。
+
+### DSH 插件包
+
+商店发行包位于 `packages/dsh-cad-studio`，一个 tarball 同时包含 16 个 Host
+工具、浏览器结果卡和完整 Python CLI。在商店条目合并前，可用 Release tarball
+或本地打包结果安装：
+
+```bash
+dsh plugin --profile <profile> add -w dsh-cad-studio
+```
+
 ### 一键安装
 
 ```bash
@@ -467,4 +487,3 @@ Checkpoint 结果会在 JSONL 输出中显示为 `checkpoint_passed` 或 `checkp
 - **当前版本**: v2.0.0
 - **Python 要求**: 3.11+
 - **核心依赖**: build123d, pyvista, click
-
