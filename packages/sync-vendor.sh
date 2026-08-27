@@ -20,11 +20,11 @@ node "$ROOT/packages/dsh-cad-client/build.mjs"
 for dest in "${CLI_DESTS[@]}"; do
   echo "[sync-vendor] src/ -> $dest"
   mkdir -p "$dest"
-  rsync -a --delete --exclude='__pycache__/' --exclude='*.pyc' "$ROOT/src/" "$dest/src/"
+  rsync -a --delete --exclude='__pycache__/' --exclude='*.pyc' --exclude='*.egg-info/' "$ROOT/src/" "$dest/src/"
   rm -rf "$dest/src/cad_cli.egg-info"
   find "$dest" -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
   cp "$ROOT/pyproject.toml" "$ROOT/install.sh" "$ROOT/install.ps1" "$ROOT/README.md" "$dest/"
-  diff -r --exclude='__pycache__' --exclude='*.pyc' "$ROOT/src" "$dest/src" >/dev/null || {
+  diff -r --exclude='__pycache__' --exclude='*.pyc' --exclude='*.egg-info' "$ROOT/src" "$dest/src" >/dev/null || {
     echo "[sync-vendor] 校验失败: $dest" >&2; exit 1; }
   du -sh "$dest"
 done
