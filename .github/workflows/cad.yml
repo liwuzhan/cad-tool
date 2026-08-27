@@ -46,8 +46,17 @@ jobs:
           node --check plugin/cad-studio/cad-studio-client.mjs
       - name: Build browser client bundle
         run: node packages/dsh-cad-client/build.mjs
+      - name: Verify synchronized distribution sources
+        run: |
+          bash packages/sync-vendor.sh
+          git diff --exit-code
       - name: Verify generated bundle syntax
         run: node --check packages/dsh-cad-client/lib/client.js
+      - name: Validate Codex runtime helper without installing dependencies
+        run: |
+          python -m py_compile plugins/cad-tool/scripts/cad.py
+          python plugins/cad-tool/scripts/cad.py check > /tmp/cad-plugin-check.json || test $? -eq 1
+          python -c "import json; data=json.load(open('/tmp/cad-plugin-check.json')); assert data['ready'] is False"
       - name: Mount and render client toolviews
         run: node plugin/cad-studio/test-client.mjs
       - name: Pack and install npm tarballs
