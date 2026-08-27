@@ -49,6 +49,30 @@ def venv_cad(venv: Path) -> Path:
     return venv / ("Scripts/cad.exe" if os.name == "nt" else "bin/cad")
 
 
+def locate_parts_root() -> Path | None:
+    """Locate the optional cad-parts source without making it a hard dependency."""
+
+    candidates: list[Path] = []
+    if os.environ.get("CAD_PARTS_ROOT"):
+        candidates.append(Path(os.environ["CAD_PARTS_ROOT"]).expanduser())
+    cwd = Path.cwd().resolve()
+    candidates.extend([cwd / "cad-parts", cwd.parent / "cad-parts"])
+    candidates.extend([
+        PLUGIN_ROOT / "cad-parts",
+        PLUGIN_ROOT.parent / "cad-parts",
+        PLUGIN_ROOT.parent.parent / "cad-parts",
+    ])
+    seen: set[Path] = set()
+    for candidate in candidates:
+        resolved = candidate.resolve()
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        if (resolved / "src" / "cadparts" / "__init__.py").is_file():
+            return resolved
+    return None
+
+
 def run(command: Sequence[str], *, check: bool = True) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         list(command),
@@ -145,6 +169,21 @@ def probe(venv: Path) -> dict[str, object]:
         result["reason"] = str(exc)
         if isinstance(exc, subprocess.CalledProcessError):
             result["stderr"] = exc.stderr.strip()[-1000:]
+    try:
+        parts = run([
+            str(python),
+            "-c",
+            "import cadparts; print(cadparts.__version__)",
+        ])
+        result["cadparts"] = {
+            "ready": True,
+            "version": parts.stdout.strip(),
+        }
+    except (OSError, subprocess.CalledProcessError):
+        result["cadparts"] = {
+            "ready": False,
+            "source": str(locate_parts_root()) if locate_parts_root() else None,
+        }
     return result
 
 
@@ -155,7 +194,9 @@ def install(venv: Path, explicit_python: str | None, upgrade: bool) -> dict[str,
     digest = source_digest()
     state_path = venv / STATE_NAME
     current = probe(venv)
-    if current.get("ready") and state_path.is_file() and not upgrade:
+    parts_root = locate_parts_root()
+    parts_ready = bool((current.get("cadparts") or {}).get("ready"))
+    if current.get("ready") and state_path.is_file() and not upgrade and (not parts_root or parts_ready):
         try:
             state = json.loads(state_path.read_text(encoding="utf-8"))
             if state.get("source_digest") == digest:
@@ -181,6 +222,12 @@ def install(venv: Path, explicit_python: str | None, upgrade: bool) -> dict[str,
     if installed.returncode != 0:
         raise RuntimeError(installed.stderr.strip()[-4000:] or "CAD dependency installation failed")
 
+    parts_warning = None
+    if parts_root is not None:
+        parts_install = run([*pip_base, "install", "-e", str(parts_root)], check=False)
+        if parts_install.returncode != 0:
+            parts_warning = parts_install.stderr.strip()[-2000:] or "cad-parts installation failed"
+
     checked = probe(venv)
     if not checked.get("ready"):
         raise RuntimeError(str(checked.get("reason", "CAD CLI smoke test failed")))
@@ -197,7 +244,12 @@ def install(venv: Path, explicit_python: str | None, upgrade: bool) -> dict[str,
         + "\n",
         encoding="utf-8",
     )
-    return {**checked, "installed": True, "base_python": base_version}
+    return {
+        **checked,
+        "installed": True,
+        "base_python": base_version,
+        **({"cadparts_warning": parts_warning} if parts_warning else {}),
+    }
 
 
 def parser() -> argparse.ArgumentParser:
@@ -215,6 +267,10 @@ def parser() -> argparse.ArgumentParser:
     exec_parser = sub.add_parser("exec", help="execute a CAD CLI command")
     exec_parser.add_argument("--venv", type=Path, default=default_venv())
     exec_parser.add_argument("cad_args", nargs=argparse.REMAINDER)
+
+    parts_parser = sub.add_parser("parts", help="query or instantiate optional standard parts")
+    parts_parser.add_argument("--venv", type=Path, default=default_venv())
+    parts_parser.add_argument("parts_args", nargs=argparse.REMAINDER)
     return root
 
 
@@ -230,6 +286,27 @@ def main() -> int:
             result = install(venv, args.python, args.upgrade)
             emit(result)
             return 0
+
+        if args.action == "parts":
+            parts_args = list(args.parts_args)
+            if parts_args[:1] == ["--"]:
+                parts_args = parts_args[1:]
+            if not parts_args:
+                raise RuntimeError("No cadparts command was supplied after 'parts --'.")
+            if not venv_python(venv).is_file():
+                emit({"ok": False, "error": "CAD environment is not installed", "venv": str(venv)})
+                return 2
+            parts_probe = probe(venv).get("cadparts") or {}
+            if not parts_probe.get("ready"):
+                emit({
+                    "ok": False,
+                    "error": "cad-parts is not installed in the CAD environment",
+                    "hint": "Place cad-parts beside the workspace or set CAD_PARTS_ROOT, then run cad.py install.",
+                    "venv": str(venv),
+                })
+                return 2
+            completed = subprocess.run([str(venv_python(venv)), "-m", "cadparts", *parts_args])
+            return completed.returncode
 
         cad_args = list(args.cad_args)
         if cad_args[:1] == ["--"]:

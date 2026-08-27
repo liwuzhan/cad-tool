@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from build123d import Shape
 
 from ..utils.jsonl import emit_event
+from ..utils.geometry import aggregate_area, aggregate_volume
 from .inspector import classify_face_type
 
 
@@ -36,6 +37,28 @@ def _render_checkpoint_image(shape, name: str) -> Optional[str]:
     Uses pyvista offscreen rendering. Returns the PNG path on success,
     None on failure (never raises — rendering is best-effort).
     """
+    from .camera import STANDARD_VIEWS
+    from .renderer_v2 import (
+        render_shape_matplotlib,
+        use_matplotlib_backend,
+    )
+
+    render_dir = Path(tempfile.gettempdir()) / "cad_checkpoints"
+    render_dir.mkdir(exist_ok=True)
+    output_png = render_dir / f"{name}.png"
+
+    if use_matplotlib_backend():
+        try:
+            render_shape_matplotlib(
+                shape,
+                STANDARD_VIEWS["iso"],
+                output_png,
+                resolution=(400, 300),
+            )
+            return str(output_png)
+        except Exception:
+            return None
+
     try:
         import pyvista as pv
         from build123d import export_stl
@@ -54,11 +77,6 @@ def _render_checkpoint_image(shape, name: str) -> Optional[str]:
 
         if mesh.n_points == 0:
             return None
-
-        # Render directory
-        render_dir = Path(tempfile.gettempdir()) / "cad_checkpoints"
-        render_dir.mkdir(exist_ok=True)
-        output_png = render_dir / f"{name}.png"
 
         # Quick isometric render (perspective, matching cad render iso view)
         plotter = pv.Plotter(off_screen=True, window_size=[400, 300])
@@ -169,8 +187,8 @@ class Checkpoint:
                 pass
 
         return CheckpointState(
-            volume=getattr(self.shape, 'volume', 0),
-            area=getattr(self.shape, 'area', 0),
+            volume=aggregate_volume(self.shape),
+            area=aggregate_area(self.shape),
             face_count=len(list(self.shape.faces())) if hasattr(self.shape, 'faces') else 0,
             edge_count=len(list(self.shape.edges())) if hasattr(self.shape, 'edges') else 0,
             vertex_count=len(list(self.shape.vertices())) if hasattr(self.shape, 'vertices') else 0,

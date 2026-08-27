@@ -11,6 +11,7 @@ from typing import Any, Optional
 class PackageMetadata:
     """Metadata stored in manifest.json"""
     name: str
+    kind: str = "part"  # part | assembly
     version: str = "2.0.0"
     created: str = field(default_factory=lambda: datetime.now().isoformat())
     head: Optional[str] = None  # Current commit hash

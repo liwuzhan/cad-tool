@@ -64,14 +64,21 @@ def find_or_error() -> ModelPackage:
 @cli.command()
 @click.argument('path', type=click.Path())
 @click.option('--name', required=True, help='Package name')
-def init(path, name):
+@click.option('--kind', type=click.Choice(['part', 'assembly']), default='part', show_default=True)
+def init(path, name, kind):
     """Initialize a new model package (.456d)"""
     try:
         package_path = Path(path)
-        package = ModelPackage.create(package_path, name=name, create_default_script=True)
+        package = ModelPackage.create(
+            package_path,
+            name=name,
+            kind=kind,
+            create_default_script=True,
+        )
         emit_event("init_success", {
             "package_path": str(package.package_path),
             "name": name,
+            "kind": kind,
             "default_script": str(package.get_default_script())
         })
     except FileExistsError as e:
@@ -248,7 +255,10 @@ def validate(script_path):
     emit_event("validate_start", {})
 
     validator = GeometryValidator()
-    errors = validator.validate(shape)
+    errors = validator.validate(
+        shape,
+        allow_multiple_solids=package.get_manifest().kind == "assembly",
+    )
 
     if errors:
         emit_event("validate_failed", {"errors": [e.to_dict() for e in errors]})
@@ -366,6 +376,7 @@ def _generate_review_template(
     lines.append(f"- 面数: {metrics.face_count}\n")
     lines.append(f"- 边数: {metrics.edge_count}\n")
     lines.append(f"- 顶点数: {metrics.vertex_count}\n")
+    lines.append(f"- 实体数: {metrics.solid_count}\n")
     bbox = metrics.bbox
     x_size = bbox[3] - bbox[0]
     y_size = bbox[4] - bbox[1]

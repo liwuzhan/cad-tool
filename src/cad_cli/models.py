@@ -47,7 +47,7 @@ class GeometryMetrics:
     face_count: int
     edge_count: int
     vertex_count: int
+    solid_count: int
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
-

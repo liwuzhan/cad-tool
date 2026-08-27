@@ -78,7 +78,10 @@ class BuildWorkflow:
             return None, error
 
         # Step 2: Validate geometry
-        validation_errors = self.validator.validate(shape)
+        validation_errors = self.validator.validate(
+            shape,
+            allow_multiple_solids=self.package.get_manifest().kind == "assembly",
+        )
         if validation_errors:
             # Emit validation warnings (non-fatal)
             from ..utils.jsonl import emit_event

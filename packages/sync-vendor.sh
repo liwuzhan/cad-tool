@@ -17,6 +17,12 @@ cp "$ROOT/plugin/cad-studio/cad-studio-plugin.mjs" "$ROOT/packages/dsh-cad-tools
 cp "$ROOT/plugin/cad-studio/cad-studio-plugin.mjs" "$ROOT/packages/dsh-cad-studio/lib/index.js"
 node "$ROOT/packages/dsh-cad-client/build.mjs"
 
+mkdir -p \
+  "$ROOT/plugins/cad-tool/skills/cad-modeling/references" \
+  "$ROOT/packages/dsh-cad-preset/skills/cad-modeling/references"
+cp "$ROOT/docs/assembly_workflow.md" "$ROOT/plugins/cad-tool/skills/cad-modeling/references/assemblies.md"
+cp "$ROOT/docs/assembly_workflow.md" "$ROOT/packages/dsh-cad-preset/skills/cad-modeling/references/assemblies.md"
+
 for dest in "${CLI_DESTS[@]}"; do
   echo "[sync-vendor] src/ -> $dest"
   mkdir -p "$dest"

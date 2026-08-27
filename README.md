@@ -11,6 +11,8 @@ AI-Native CAD Command Line Tool with Model Packages (.456d)
 3. **JSON Metadata** - Render outputs include camera parameters and timestamps
 4. **JSONL History** - Efficient commit history in JSONL format
 5. **Artifact Management** - Configurable cleanup policies for managing storage
+6. **Assembly Packages** - `kind=assembly`, multi-solid validation, aggregate metrics, and component-aware headless PNGs
+7. **Optional Standard Parts** - Progressive `cadparts` catalog queries and reusable assembly proxies
 
 ### Migration from v1.0
 
@@ -40,9 +42,10 @@ local pack with:
 dsh plugin --profile <profile> add -w dsh-cad-studio
 ```
 
-For headless automation where the platform renderer cannot create PNGs, set
-`CAD_SKIP_RENDER=1`. Commits still execute geometry checks and save STEP,
-metrics, validation results, and version history; only thumbnails are skipped.
+Headless Linux automatically uses a process-safe Matplotlib renderer and colors
+assembly solids separately. On unstable Windows remote/screen-off sessions, set
+`CAD_RENDER_BACKEND=matplotlib`. Use `CAD_SKIP_RENDER=1` only when automation
+should omit PNGs completely; geometry checks, STEP, metrics, and history remain active.
 
 ### One-line install
 
@@ -106,6 +109,16 @@ pip install -e .
 cad init my_gear --name="Spur Gear"
 cd my_gear.456d
 ```
+
+For an assembly, choose the assembly template explicitly:
+
+```bash
+cad init bearing_block --name="Bearing block assembly" --kind assembly
+```
+
+The assembly workflow keeps components as labeled `Compound` children and allows
+multiple valid solids. See [`docs/assembly_workflow.md`](docs/assembly_workflow.md)
+for coordinate, interface, standard-parts, validation, and review conventions.
 
 This creates:
 ```

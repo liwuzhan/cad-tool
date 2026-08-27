@@ -140,6 +140,7 @@ class ScriptExecutorV2:
 
         Returns (shape, error) — exactly one will be None.
         """
+        script_path = script_path.resolve()
         self._checkpoint_names = []
         self._checkpoint_results = []
 

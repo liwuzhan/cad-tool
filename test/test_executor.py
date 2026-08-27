@@ -112,3 +112,14 @@ def test_no_pickle_caching(package):
     # Check no pickle file was created
     pickle_path = package.runlog_dir / "current_shape.pkl"
     assert not pickle_path.exists()
+
+
+def test_execute_resolves_relative_script_before_changing_subprocess_cwd(package, monkeypatch):
+    script = package.src_dir / "relative.py"
+    script.write_text("from build123d import Box\nresult = Box(2, 3, 4)\n")
+    monkeypatch.chdir(package.package_path)
+
+    shape, error = ScriptExecutorV2(package).execute(Path("src/relative.py"))
+
+    assert error is None
+    assert shape.volume == pytest.approx(24)

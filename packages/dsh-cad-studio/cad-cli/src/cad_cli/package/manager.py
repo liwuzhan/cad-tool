@@ -31,6 +31,32 @@ DESIGN_DOC_TEMPLATE = """\
 - [ ] 基体：expect_solids(1), expect_bbox_size(X, Y, Z)
 """
 
+ASSEMBLY_DESIGN_DOC_TEMPLATE = """\
+# {name} - 装配设计文档
+
+## 装配目标
+<!-- 功能、总体包络、必须保留的非标设计上下文 -->
+
+## 坐标与接口
+
+- 世界坐标：X 长、Y 宽、Z 高。
+- 每个实例使用唯一 label；所有 Pos/Rot 显式写出。
+- 标准件按 cadparts 命名接口定位，不从 STEP 或图片猜接口。
+
+## 组件表
+
+| 实例 label | 来源 | 数量 | 接口/位姿 | BOM/采购描述 |
+|---|---|---:|---|---|
+| | 非标 / cadparts | | | |
+
+## 装配校验
+
+- [ ] result 为保留独立实体的 Compound
+- [ ] expect_solids(组件实体总数)
+- [ ] expect_bbox_size(总体 X, Y, Z)
+- [ ] cad validate / inspect / review 通过
+"""
+
 
 class ModelPackage:
     """
@@ -73,6 +99,7 @@ class ModelPackage:
         cls,
         path: Path,
         name: str,
+        kind: str = "part",
         create_default_script: bool = True,
     ) -> "ModelPackage":
         """
@@ -81,6 +108,7 @@ class ModelPackage:
         Args:
             path: Path for the package (will add .456d if not present)
             name: Package name
+            kind: Package kind (part or assembly)
             create_default_script: Whether to create a default main.py script
 
         Returns:
@@ -89,6 +117,9 @@ class ModelPackage:
         Raises:
             FileExistsError: If package already exists
         """
+        if kind not in {"part", "assembly"}:
+            raise ValueError("kind must be 'part' or 'assembly'")
+
         # Ensure .456d extension
         if not str(path).endswith(cls.PACKAGE_EXTENSION):
             path = Path(str(path) + cls.PACKAGE_EXTENSION)
@@ -107,12 +138,33 @@ class ModelPackage:
 
         # Initialize manifest
         package = cls(path)
-        package.manifest_manager.create(name=name)
+        package.manifest_manager.create(name=name, kind=kind)
 
         # Create default script if requested
         if create_default_script:
             default_script = path / cls.SRC_DIR / cls.DEFAULT_SCRIPT
-            default_script.write_text(
+            if kind == "assembly":
+                default_source = (
+                    "# CAD assembly script\n"
+                    "# Read design.md and query cadparts before modeling standard parts.\n\n"
+                    "from build123d import *\n"
+                    "from cad_cli.feedback import Checkpoint\n\n"
+                    "Checkpoint.reset()\n\n"
+                    "# Build or instantiate components, apply explicit Pos/Rot, and label each instance.\n"
+                    "components = [\n"
+                    "    Box(100, 50, 10, align=(Align.CENTER, Align.CENTER, Align.MIN)),\n"
+                    "]\n"
+                    "components[0].label = 'base'\n\n"
+                    "assembly = Compound(children=components)\n"
+                    "assembly.label = 'assembly'\n"
+                    "Checkpoint(assembly, 'layout') \\\n"
+                    "    .expect_solids(1) \\\n"
+                    "    .expect_bbox_size(100, 50, 10, tolerance=0.1) \\\n"
+                    "    .verify()\n\n"
+                    "result = assembly\n"
+                )
+            else:
+                default_source = (
                 "# CAD model script\n"
                 "# 1. 先完成 design.md\n"
                 "# 2. 参数定义在顶部\n"
@@ -131,14 +183,17 @@ class ModelPackage:
                 "        .expect_solids(1) \\\n"
                 "        .expect_bbox_size(length, width, height, tolerance=0.1) \\\n"
                 "        .verify()\n\n"
-                "result = part.part\n",
+                "result = part.part\n"
+                )
+            default_script.write_text(
+                default_source,
                 encoding='utf-8'
             )
 
         # Create design document
         design_doc = path / DESIGN_DOC_FILENAME
         design_doc.write_text(
-            DESIGN_DOC_TEMPLATE.format(name=name),
+            (ASSEMBLY_DESIGN_DOC_TEMPLATE if kind == "assembly" else DESIGN_DOC_TEMPLATE).format(name=name),
             encoding='utf-8'
         )
 

@@ -4,6 +4,8 @@ import re
 from collections import Counter
 from typing import TYPE_CHECKING, Any, Dict, List, Tuple
 
+from ..utils.geometry import aggregate_area, aggregate_volume
+
 if TYPE_CHECKING:
     from build123d import Shape
 
@@ -88,7 +90,7 @@ class GeometryInspector:
         Returns:
             Volume value
         """
-        return shape.volume
+        return aggregate_volume(shape)
 
     def get_area(self, shape: "Shape") -> float:
         """
@@ -100,7 +102,7 @@ class GeometryInspector:
         Returns:
             Surface area value
         """
-        return shape.area
+        return aggregate_area(shape)
 
     def get_faces(self, shape: "Shape") -> List[Dict[str, Any]]:
         """
@@ -258,7 +260,7 @@ class GeometryInspector:
         z_size = bounds[5] - bounds[2]
 
         face_data = self.get_face_types(shape)
-        vol = shape.volume
+        vol = aggregate_volume(shape)
 
         lines = []
         lines.append("=== Geometry Description ===")
@@ -268,6 +270,7 @@ class GeometryInspector:
         lines.append(f"Overall size: X={x_size:.1f} x Y={y_size:.1f} x Z={z_size:.1f} mm")
         lines.append(f"Bounding box: X[{bounds[0]:.1f}..{bounds[3]:.1f}]  Y[{bounds[1]:.1f}..{bounds[4]:.1f}]  Z[{bounds[2]:.1f}..{bounds[5]:.1f}]")
         lines.append(f"Volume: {vol:.2f} mm³")
+        lines.append(f"Solids: {len(list(shape.solids())) if hasattr(shape, 'solids') else 0}")
         lines.append(f"Total faces: {face_data['total']}")
         lines.append("")
 

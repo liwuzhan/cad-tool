@@ -21,7 +21,16 @@ package can be installed from the Plugins tab or the Codex `/plugins` browser.
 ## What the skill covers
 
 - Parametric build123d modeling in `.456d` model packages.
+- Multi-solid assembly packages with explicit component placement and labels.
+- Optional `cad-parts` search, comparison, interface metadata, and proxies.
 - Feature-level Checkpoint assertions and BRep validation.
 - Geometry inspection, text or rendered review, and design history.
 - STEP and STL export.
-- A separate path for preview-only failures on headless Windows systems.
+- Automatic headless Matplotlib rendering with per-solid assembly colors; VTK remains available where stable.
+
+The runtime helper exposes the optional catalog without requiring shell activation:
+
+```bash
+python3 scripts/cad.py parts -- search "20mm 轴承"
+python3 scripts/cad.py parts -- describe 6204
+```

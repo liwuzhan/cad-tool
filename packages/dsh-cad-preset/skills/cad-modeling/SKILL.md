@@ -1,6 +1,6 @@
 ---
 name: cad-modeling
-description: build123d 参数化建模工作流。在 CAD 工场 preset 内完成 .456d 模型包创建、特征级 Checkpoint 验证、视觉审查与版本提交。使用前先 cad_env_status 确认环境；建模 API 细节见 docs/build123d_skills.md。
+description: build123d 参数化零件与装配建模工作流。在 CAD 工场 preset 内完成 .456d 模型包创建、可选 cad-parts 标准件复用、Checkpoint 验证、视觉审查与版本提交。使用前先 cad_env_status 确认环境。
 ---
 
 # CAD 建模工作流（CAD 工场）
@@ -11,11 +11,16 @@ description: build123d 参数化建模工作流。在 CAD 工场 preset 内完�
 |------|------|------|
 | 环境 | `cad_env_status` / `cad_env_bootstrap` | 检查 / 安装 venv + build123d + cad-cli |
 | 包管理 | `cad_pkg_list` / `cad_init` | 发现 / 创建 `.456d` 模型包 |
+| 标准件 | `cadparts search/compare/describe` | 通过当前平台 shell 渐进查询可选零件库 |
 | 建模 | `cad_run` | 执行 `src/main.py`（内存，不保存工件） |
 | 验证 | `cad_validate` / `cad_inspect` | BRep 有效性 / 体积面积边界框面数 |
 | 版本 | `cad_commit` | 执行 + 验证 + STEP/缩略图/metrics + 历史记录 |
 
 工作区有多个 `.456d` 包时，所有工具都要用 `package` 参数明确指定。
+
+需求包含装配、多组件、机构或外购标准件时，先读取
+`references/assemblies.md`，并用 `cad_init(kind="assembly")` 创建装配包。
+单零件任务不要加载装配参考。
 
 ## 标准流程
 
@@ -23,7 +28,7 @@ description: build123d 参数化建模工作流。在 CAD 工场 preset 内完�
 2. **src/main.py**：
    - 顶部 `# === 参数 ===` 区，从 design.md 复制所有数值；
    - 禁止 magic numbers：所有尺寸必须是命名变量；
-   - 每个特征操作后加 `Checkpoint`，必须含 `.expect_solids(1)`；
+   - 单零件的每个特征操作后加 `Checkpoint`，必须含 `.expect_solids(1)`；装配体按组件实体总数检查；
    - 基体 Checkpoint 必须含 `.expect_bbox_size(X, Y, Z)`。
 3. **cad_run** 迭代：`ok=false` 时读 `error.hint`；`checkpoints` 里 `checkpoint_failed` 立即定位是哪个特征出错。
 4. **cad_inspect --prop=volume/bounds** 核对关键尺寸。

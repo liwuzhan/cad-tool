@@ -7,12 +7,18 @@ if TYPE_CHECKING:
 
 from ..constants import ErrorCode
 from ..models import ErrorInfo
+from ..utils.geometry import aggregate_volume
 
 
 class GeometryValidator:
     """Validates geometry using BRep checks"""
 
-    def validate(self, shape: "Shape") -> List[ErrorInfo]:
+    def validate(
+        self,
+        shape: "Shape",
+        *,
+        allow_multiple_solids: bool = False,
+    ) -> List[ErrorInfo]:
         """
         Execute BRep validation checks
 
@@ -75,7 +81,7 @@ class GeometryValidator:
 
         # Check for zero volume (might indicate degenerate geometry)
         try:
-            if shape.volume <= 0:
+            if aggregate_volume(shape) <= 0:
                 errors.append(ErrorInfo(
                     file="",
                     line=0,
@@ -91,7 +97,7 @@ class GeometryValidator:
         try:
             if hasattr(shape, 'solids'):
                 solids = list(shape.solids())
-                if len(solids) > 1:
+                if len(solids) > 1 and not allow_multiple_solids:
                     errors.append(ErrorInfo(
                         file="",
                         line=0,

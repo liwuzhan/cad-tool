@@ -161,6 +161,7 @@ const metricsSchema = {
     face_count: { type: "integer" },
     edge_count: { type: "integer" },
     vertex_count: { type: "integer" },
+    solid_count: { type: "integer" },
   },
 };
 const freeObject = { type: "object" };
@@ -498,6 +499,7 @@ export default {
       "out = {'version': f'{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}',",
       "       'arch': platform.machine(), 'platform': sys.platform}",
       "mods = [('build123d', '>=0.5.0'), ('cad_cli', '>=2.0.0'), ('pyvista', '>=0.43.0')]",
+      "optional = [('cadparts', 'standard-parts soft dependency')]",
       "packages, missing = [], []",
       "for mod, req in mods:",
       "    try:",
@@ -505,12 +507,19 @@ export default {
       "        packages.append({'name': mod, 'version': str(getattr(m, '__version__', 'unknown')), 'required': req})",
       "    except Exception:",
       "        missing.append(mod)",
-      "print(json.dumps({'detected': out, 'packages': packages, 'missing': missing}))",
+      "optional_missing = []",
+      "for mod, req in optional:",
+      "    try:",
+      "        m = importlib.import_module(mod)",
+      "        packages.append({'name': mod, 'version': str(getattr(m, '__version__', 'unknown')), 'required': req, 'optional': True})",
+      "    except Exception:",
+      "        optional_missing.append(mod)",
+      "print(json.dumps({'detected': out, 'packages': packages, 'missing': missing, 'optional_missing': optional_missing}))",
     ].join("\n");
 
     define(
       "cad_env_status",
-      "检查 CAD Python 环境：解释器、build123d/cad_cli/pyvista 依赖、venv 与 CLI 源码定位。纯读取。",
+      "检查 CAD Python 环境：解释器、build123d/cad_cli/pyvista 依赖、可选 cadparts 标准件库、venv 与 CLI 源码定位。纯读取。",
       {
         type: "object",
         properties: {
@@ -531,6 +540,7 @@ export default {
             cli: freeObject,
             packages: { type: "array", items: freeObject },
             missing: { type: "array", items: { type: "string" } },
+            optional_missing: { type: "array", items: { type: "string" } },
             hint: { type: "string" },
             error: errorSchema,
           },
@@ -552,12 +562,14 @@ export default {
         let detected = {};
         let packages = [];
         let missing = [];
+        let optionalMissing = [];
         if (probe.exitCode === 0) {
           try {
             const parsed = JSON.parse(probe.stdout.split("\n").find((l) => l.trim().startsWith("{")) || "{}");
             detected = parsed.detected || {};
             packages = parsed.packages || [];
             missing = parsed.missing || [];
+            optionalMissing = parsed.optional_missing || [];
           } catch { missing = ["unknown"]; }
         } else {
           missing = ["python"];
@@ -576,6 +588,7 @@ export default {
           cli: { root: cliRoot, found: !!cliRoot },
           packages,
           missing,
+          optional_missing: optionalMissing,
           hint,
           ...(probe.exitCode !== 0 && missing.includes("python") ? { error: { code: "E-ENV", message: short(probe.stderr, 400) || "Python 不可用", hint } } : {}),
         };
@@ -679,7 +692,20 @@ export default {
             await step("detect", [basePython, "--version"], ws);
             if (!exists || args.upgrade) await step("venv", [basePython, "-m", "venv", venvDir], ws);
             await step("pip-upgrade", [venvPython, "-m", "pip", "install", "--upgrade", "pip"], ws);
-            const needInstall = args.upgrade || !exists;
+            let needInstall = args.upgrade || !exists;
+            if (exists && !args.upgrade) {
+              const existingProbe = await spawnCollect(
+                [venvPython, "-c", "import build123d, cad_cli, pyvista"],
+                { cwd: ws, session: sessionOf(exec), signal },
+              );
+              needInstall = existingProbe.exitCode !== 0;
+              steps.push({
+                phase: "probe-existing",
+                status: needInstall ? "warn" : "ok",
+                detail: needInstall ? "现有 venv 不完整，将重新安装" : undefined,
+                durationMs: 0,
+              });
+            }
             if (needInstall) await step("pip-install", [venvPython, "-m", "pip", "install", "-e", cliRoot], cliRoot);
           }
           // 可选联动：cad-parts 标准件库（软依赖；工作区内联/姐妹仓存在才装，失败不阻断 bootstrap）
@@ -774,6 +800,7 @@ export default {
           try { manifest = JSON.parse(readFileSync(join(dir, "manifest.json"), "utf8")); } catch { /* keep */ }
           return {
             name: manifest.name || basename(dir),
+            kind: manifest.kind || "part",
             path: dir,
             head: manifest.head || null,
             branch: manifest.current_branch || null,
@@ -789,12 +816,13 @@ export default {
     // ─────────────────────────────────────────────────────────────────────
     define(
       "cad_init",
-      "在会话工作区内创建新的 .456d 模型包（含 manifest 与 src/main.py 模板）。",
+      "在会话工作区内创建新的 .456d 零件或装配包（含 manifest、design.md 与 src/main.py 模板）。",
       {
         type: "object",
         properties: {
           path: { type: "string", description: "模型包名或相对路径；实际目录为 <path>.456d" },
           name: { type: "string", description: "模型显示名" },
+          kind: { type: "string", enum: ["part", "assembly"], description: "包类型；缺省 part，多实体装配用 assembly" },
         },
         required: ["path", "name"],
       },
@@ -820,7 +848,8 @@ export default {
         const py = resolvePython(ws);
         const cliRoot = requireCli(ws);
         void cliRoot;
-        const r = await runCli("init", ws, [...pythonArgs(py), "init", target, "--name", text(args.name)], {
+        const kind = text(args.kind, "part");
+        const r = await runCli("init", ws, [...pythonArgs(py), "init", target, "--name", text(args.name), "--kind", kind], {
           session: sessionOf(exec), signal: combinedSignal(exec, 60000), cwd: ws,
         });
         const pkgDir = `${target}.456d`;
@@ -829,12 +858,12 @@ export default {
         return {
           ok: r.ok,
           // 失败路径 package 键缺省而非 null（schema 为 object 型）
-          ...(r.ok ? { package: { path: pkgDir, name: manifest.name || text(args.name), defaultScript: join(pkgDir, "src", "main.py") } } : {}),
+          ...(r.ok ? { package: { path: pkgDir, name: manifest.name || text(args.name), kind: manifest.kind || kind, defaultScript: join(pkgDir, "src", "main.py") } } : {}),
           events: r.events,
           ...(r.ok ? {} : { error: r.error }),
         };
       },
-      { presentCall: (args) => ({ card: "generic", title: `cad_init ${args.path}`, kind: "other", rawInput: { name: args.name }, locations: [{ path: `${args.path}.456d` }] }) },
+      { presentCall: (args) => ({ card: "generic", title: `cad_init ${args.path}`, kind: "other", rawInput: { name: args.name, kind: args.kind || "part" }, locations: [{ path: `${args.path}.456d` }] }) },
     );
 
     // ─────────────────────────────────────────────────────────────────────

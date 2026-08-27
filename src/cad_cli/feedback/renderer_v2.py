@@ -1,6 +1,8 @@
 """Offscreen renderer v2 - with JSON metadata output"""
 
 import json
+import os
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Tuple, Any, Optional
@@ -10,6 +12,128 @@ if TYPE_CHECKING:
 
 from ..package import ModelPackage
 from .camera import CameraView
+
+
+_ASSEMBLY_COLORS = (
+    "#d9e6f2",
+    "#f2d9b5",
+    "#cfe8cf",
+    "#e5d4ef",
+    "#f2caca",
+    "#d6e5e3",
+    "#eee1a8",
+    "#d7d7d7",
+)
+
+_MATPLOTLIB_VIEWS = {
+    "iso": (25, -45),
+    "front": (0, -90),
+    "back": (0, 90),
+    "right": (0, 0),
+    "left": (0, 180),
+    "top": (90, -90),
+    "bottom": (-90, -90),
+}
+
+
+def use_matplotlib_backend() -> bool:
+    """Select a process-safe renderer before VTK can touch a missing display."""
+
+    requested = os.environ.get("CAD_RENDER_BACKEND", "auto").strip().lower()
+    if requested == "matplotlib":
+        return True
+    if requested == "pyvista":
+        return False
+    return sys.platform.startswith("linux") and not (
+        os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")
+    )
+
+
+def render_shape_matplotlib(
+    shape: "Shape",
+    view: CameraView,
+    output_png: Path,
+    *,
+    resolution: Tuple[int, int] = (800, 600),
+) -> dict[str, Any]:
+    """Render each assembly solid separately so Compound meshes stay readable."""
+
+    try:
+        import matplotlib
+
+        matplotlib.use("Agg")
+        from matplotlib import pyplot as plt
+        from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+    except ImportError as exc:
+        raise ImportError("matplotlib is required for headless CAD rendering") from exc
+
+    solids = list(shape.solids()) if hasattr(shape, "solids") else []
+    renderables = solids or [shape]
+    assembly_alpha = 0.78 if len(renderables) > 1 else 1.0
+    width, height = resolution
+    dpi = 120
+    figure = plt.figure(figsize=(width / dpi, height / dpi), dpi=dpi)
+    axis = figure.add_subplot(111, projection="3d")
+
+    for index, solid in enumerate(renderables):
+        vertices, triangles = solid.tessellate(0.08)
+        if not vertices or not triangles:
+            continue
+        points = [(point.X, point.Y, point.Z) for point in vertices]
+        faces = [[points[vertex_index] for vertex_index in triangle] for triangle in triangles]
+        axis.add_collection3d(Poly3DCollection(
+            faces,
+            facecolor=_ASSEMBLY_COLORS[index % len(_ASSEMBLY_COLORS)],
+            edgecolor="none",
+            linewidth=0,
+            alpha=assembly_alpha,
+        ))
+        for edge in solid.edges():
+            try:
+                samples = [edge.position_at(step / 24) for step in range(25)]
+            except Exception:
+                try:
+                    samples = [vertex.center() for vertex in edge.vertices()]
+                except Exception:
+                    continue
+            if len(samples) < 2:
+                continue
+            axis.plot(
+                [point.X for point in samples],
+                [point.Y for point in samples],
+                [point.Z for point in samples],
+                color="#263238",
+                linewidth=0.9,
+            )
+
+    bbox = shape.bounding_box()
+    bounds = (
+        (bbox.min.X, bbox.max.X),
+        (bbox.min.Y, bbox.max.Y),
+        (bbox.min.Z, bbox.max.Z),
+    )
+    centers = [(low + high) / 2 for low, high in bounds]
+    span = max(high - low for low, high in bounds) or 1.0
+    radius = span * 0.58
+    axis.set_xlim(centers[0] - radius, centers[0] + radius)
+    axis.set_ylim(centers[1] - radius, centers[1] + radius)
+    axis.set_zlim(centers[2] - radius, centers[2] + radius)
+    axis.set_box_aspect((1, 1, 1))
+    axis.set_proj_type("ortho" if view.orthographic else "persp")
+    elevation, azimuth = _MATPLOTLIB_VIEWS.get(view.name, _MATPLOTLIB_VIEWS["iso"])
+    axis.view_init(elev=elevation, azim=azimuth)
+    axis.set_axis_off()
+    axis.set_title(f"{getattr(shape, 'label', 'model')} · {view.name}", fontsize=10)
+
+    output_png.parent.mkdir(parents=True, exist_ok=True)
+    figure.savefig(output_png, bbox_inches="tight", pad_inches=0.08, facecolor="white")
+    plt.close(figure)
+    return {
+        "backend": "matplotlib",
+        "position": list(view.position),
+        "focal_point": list(view.focal_point),
+        "view_up": list(view.view_up),
+    }
 
 
 class OffscreenRendererV2:
@@ -55,6 +179,27 @@ class OffscreenRendererV2:
             ImportError: If pyvista is not available
             Exception: If rendering fails
         """
+        if use_matplotlib_backend():
+            camera = render_shape_matplotlib(
+                shape,
+                view,
+                output_png,
+                resolution=self.resolution,
+            )
+            metadata = {
+                "view": view.name,
+                "camera": camera,
+                "resolution": list(self.resolution),
+                "timestamp": datetime.now().isoformat(),
+                "png_path": str(output_png),
+                "backend": "matplotlib",
+            }
+            if output_json is None:
+                output_json = output_png.with_suffix('.json')
+            output_json.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+            metadata["json_path"] = str(output_json)
+            return metadata
+
         try:
             import pyvista as pv
         except ImportError:
@@ -156,6 +301,7 @@ class OffscreenRendererV2:
             "resolution": list(self.resolution),
             "timestamp": datetime.now().isoformat(),
             "png_path": str(output_png),
+            "backend": "pyvista",
         }
 
         # v2: Save metadata JSON
