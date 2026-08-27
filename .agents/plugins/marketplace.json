@@ -1,0 +1,20 @@
+{
+  "name": "cad-tool",
+  "interface": {
+    "displayName": "CAD Tool"
+  },
+  "plugins": [
+    {
+      "name": "cad-tool",
+      "source": {
+        "source": "local",
+        "path": "./plugins/cad-tool"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_USE"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

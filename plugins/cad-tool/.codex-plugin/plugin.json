@@ -1,0 +1,38 @@
+{
+  "name": "cad-tool",
+  "version": "0.1.0",
+  "description": "Create, validate, version, render, and export parametric CAD models with build123d and the bundled CAD CLI.",
+  "author": {
+    "name": "liwuzhan",
+    "url": "https://github.com/liwuzhan"
+  },
+  "homepage": "https://github.com/liwuzhan/cad-tool",
+  "repository": "https://github.com/liwuzhan/cad-tool",
+  "license": "MIT",
+  "keywords": ["cad", "build123d", "step", "stl", "parametric-modeling"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "CAD Tool",
+    "shortDescription": "Build and verify parametric CAD models.",
+    "longDescription": "A local-first CAD workflow for Codex using build123d and self-contained .456d model packages, with geometry checks, design history, previews, and STEP/STL export.",
+    "developerName": "liwuzhan",
+    "category": "Developer Tools",
+    "capabilities": ["Write", "Execute"],
+    "websiteURL": "https://github.com/liwuzhan/cad-tool",
+    "privacyPolicyURL": "https://github.com/liwuzhan/cad-tool/blob/main/PRIVACY.md",
+    "termsOfServiceURL": "https://github.com/liwuzhan/cad-tool/blob/main/TERMS.md",
+    "defaultPrompt": [
+      "Create a parametric CAD model from these dimensions.",
+      "Validate this .456d model and export STEP.",
+      "Modify this CAD design and commit a new version."
+    ],
+    "brandColor": "#2463EB",
+    "composerIcon": "./assets/icon.png",
+    "logo": "./assets/logo.png",
+    "screenshots": [
+      "./assets/screenshot-iso.png",
+      "./assets/screenshot-front.png",
+      "./assets/screenshot-top.png"
+    ]
+  }
+}

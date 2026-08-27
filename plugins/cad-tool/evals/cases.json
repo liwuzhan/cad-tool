@@ -1,0 +1,14 @@
+{
+  "positive": [
+    "Create a 100 mm by 60 mm by 30 mm enclosure with a centered 20 mm through-hole and export STEP.",
+    "Open the existing bracket.456d model, move the mounting holes 3 mm outward, validate it, and commit the change.",
+    "Inspect this build123d part's bounds and volume and tell me whether it matches design.md.",
+    "The fillet in src/main.py fails. Find the first broken CAD feature using Checkpoints and repair it.",
+    "Create a new branch of this .456d design, thicken the base, and export an STL for printing."
+  ],
+  "negative": [
+    "Make a CSS-only 3D card animation for my website.",
+    "Summarize this mechanical engineering paper without creating geometry.",
+    "Find online shops that sell an existing mounting bracket."
+  ]
+}

@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cad-cli"
+version = "2.0.0"
+description = "AI-Native CAD Command Line Tool based on build123d - Model Package Architecture"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "CAD CLI Team"}
+]
+dependencies = [
+    # build123d 0.11 requires cadquery-ocp-novtk itself; do NOT declare the
+    # plain cadquery-ocp variant here (it would install a second OCP build).
+    "build123d>=0.5.0",
+    "pyvista>=0.43.0",
+    "click>=8.1.0",
+    "numpy>=1.24.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.0.0",
+    "mypy>=1.5.0",
+]
+
+[project.scripts]
+cad = "cad_cli.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.black]
+line-length = 100
+target-version = ['py311']
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
