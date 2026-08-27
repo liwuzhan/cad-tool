@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.0-alpha.2 (2026-08-27)
+- 对齐自带完整 Python CLI 的 `dsh-cad-tools` alpha.2。
+
 ## 0.1.0-alpha.1 (2026-08-16)
 - M0: build123d 0.11 STEP 再导出 Compound fallback；macOS `/var`↔`/private/var` 路径归一化；pytest 66/66。
 - P1/P2: CadRuntime（环境解析/沙箱子进程/JSONL 规范化/runlog）+ 16 个 cad_* 工具。
