@@ -1,0 +1,5 @@
+# One direct profile dependency contains the Host tools, browser client, and
+# vendored Python CLI. DSH discovers the client half through dsh.client.
+- insert:
+    - id: cad-studio
+      name: dsh-cad-studio

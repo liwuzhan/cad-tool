@@ -5,6 +5,7 @@
 
 | 包 | 职责 | 关键清单 |
 |----|------|----------|
+| `dsh-cad-studio` | **商店推荐单包**：Host + Client + Python CLI | 同时声明 `dsh.bundle` / `dsh.client`，profile 只需一个直接依赖 |
 | `dsh-cad-tools` | Host 插件：P1 CadRuntime + P2 16 工具 | `exports["."] → lib/index.js`，composition 行直接 `name: '@deepseek-ai/dsh-cad-tools'` |
 | `dsh-cad-client` | 双面插件：Host 无操作 + 浏览器 CADPreviewNode | `dsh.client = {platform:'web', inject:[runtime, ui-tool, ui-conversation]}`，`exports["./client"] → lib/client.js`（`window.__ModuleLoader__.load` bundle） |
 | `dsh-cad-bundle` | profile bundle | `dsh.bundle.patch → cordis.patch.yml`，insert 上面两行；加入 profile 的 `dsh.profile.bundles` 或 `dsh plugin add` |
@@ -13,6 +14,9 @@
 ## 安装（未发布前本地验证）
 
 ```bash
+# 推荐：单包发行
+npm pack ./dsh-cad-studio
+
 # 1) Host 工具包：打包
 npm pack ./dsh-cad-tools
 
@@ -23,7 +27,18 @@ node dsh-cad-client/build.mjs
 cd dsh-cad-preset && npm run install
 ```
 
-## 已实测的 pnpm 安装路径（round 5）
+## 商店发行路径
+
+`dsh-cad-studio` 消除了 pnpm 不提升传递依赖的问题。Host、Client 与 vendored
+CLI 都在同一个 tarball 内，bundle patch 只插入一行：
+
+```bash
+dsh plugin --profile <profile> add -w dsh-cad-studio
+```
+
+下面的四包结构继续保留，供独立调试和兼容旧部署。
+
+## 已实测的旧四包 pnpm 安装路径（round 5）
 
 DSH loader 从 **profile 根**解析组合行里的裸包名，而 pnpm 的 hoisted linker
 不会把传递依赖提升到根 —— 因此 **必须把 tools/client 作为 profile 的直接依赖安装**，

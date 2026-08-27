@@ -1,0 +1,67 @@
+{
+  "name": "dsh-cad-studio",
+  "version": "0.1.0-alpha.2",
+  "description": "DSH plugin for AI-driven parametric CAD modeling, validation, rendering, versioning, and STEP/STL export",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json",
+    "./cordis.patch.yml": "./cordis.patch.yml"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "cordis.patch.yml",
+    "screenshots.json",
+    "assets/*.png",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "cad-cli/src/cad_cli",
+    "cad-cli/pyproject.toml",
+    "cad-cli/install.sh",
+    "cad-cli/install.ps1",
+    "cad-cli/README.md"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/liwuzhan/cad-tool.git",
+    "directory": "packages/dsh-cad-studio"
+  },
+  "homepage": "https://github.com/liwuzhan/cad-tool/tree/main/packages/dsh-cad-studio",
+  "bugs": "https://github.com/liwuzhan/cad-tool/issues",
+  "keywords": [
+    "dsh-plugin",
+    "cad",
+    "build123d",
+    "step",
+    "stl"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-tool",
+        "@deepseek-ai/dsh-client-ui-conversation"
+      ]
+    }
+  },
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-client-runtime": ">=0.1.0-rc.1 <0.1.0 || >=0.1.0-rc.1 <0.2.0-0",
+    "@deepseek-ai/dsh-client-ui-tool": ">=0.1.0-rc.1 <0.1.0 || >=0.1.0-rc.1 <0.2.0-0",
+    "@deepseek-ai/dsh-client-ui-conversation": ">=0.1.0-rc.1 <0.1.0 || >=0.1.0-rc.1 <0.2.0-0"
+  }
+}
