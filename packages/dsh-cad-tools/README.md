@@ -1,8 +1,7 @@
 # cad-studio —— DSH CAD 工场插件（阶段 A：vendored preset）
 
-让 DSH 会话内的 agent 通过 `cad_*` 工具完成完整 AI CAD 工作流：
-`init → 编写 src/main.py → run → validate → inspect → review → commit → log/checkout/export`。
-Python 侧仍以 CAD CLI（build123d）为唯一几何真源；本插件只做编排与展示。
+为 DSH 会话提供 `cad_*` 建模、观察、图像审查、版本与导出能力。模型按任务选择所需工具，
+不要求执行固定流水线。Python 侧仍以 CAD CLI（build123d）为唯一几何真源；本插件只做编排与展示。
 
 ## 文件结构
 
@@ -15,9 +14,9 @@ cad-studio/
 ├── cad-studio-client.code.js      # Client 半件 cordis_define 的 code.client 函数体（由 .mjs 派生）
 ├── tool-bootstrap.mjs             # 首个请求小工具面，之后展开完整 catalog
 ├── skills/
-│   ├── cad-modeling/              # 建模工作流 + Checkpoint 模板 + 5 致命陷阱
-│   ├── cad-build123d-reference/   # build123d API 速查
-│   └── cad-checkpoint/            # Checkpoint 特征级验证系统用法
+│   ├── cad-modeling/              # 工具目录、最少约定与可跳过范例
+│   ├── cad-build123d-reference/   # 按需 build123d API 速查
+│   └── cad-checkpoint/            # 可选的 Checkpoint 数值探针
 └── README.md
 ```
 

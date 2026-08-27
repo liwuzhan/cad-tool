@@ -1,0 +1,27 @@
+{
+  "name": "6204 bearing block assembly",
+  "kind": "assembly",
+  "version": "2.0.0",
+  "created": "2026-08-27T18:52:29.093838",
+  "head": "834d401a022b",
+  "branches": {
+    "main": "834d401a022b"
+  },
+  "current_branch": "main",
+  "artifact_policy": "latest_per_branch",
+  "unit": "mm",
+  "timeout_seconds": 60,
+  "render": {
+    "default_views": [
+      "top",
+      "front",
+      "right",
+      "iso"
+    ],
+    "image_format": "png",
+    "resolution": [
+      800,
+      600
+    ]
+  }
+}

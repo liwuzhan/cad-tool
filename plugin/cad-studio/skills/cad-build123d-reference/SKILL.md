@@ -1,9 +1,9 @@
 ---
 name: cad-build123d-reference
-description: build123d API 速查与 5 个致命陷阱。编写或修改 src/main.py 前查阅：3D/2D 原语、草图与曲线、extrude/revolve/loft/sweep/fillet、Locations/PolarLocations/GridLocations、选择器、工作平面、对齐与布尔模式。
+description: 按需查询 build123d API、定位系统、选择器、对齐、布尔模式和常见语义差异；仅在模型对具体调用不确定时读取相关小节。
 ---
 # build123d API 速查参考
-> LLM 建模参考：可用操作 + 致命陷阱 + 建模模板。所有代码默认 `from build123d import *`。
+> 按需查阅可用操作、常见语义差异和代码片段。所有代码默认 `from build123d import *`。
 
 ## Section 1: API 速查参考
 
@@ -200,7 +200,7 @@ Box(10, 10, 10, align=(Align.MIN, Align.MIN, Align.MIN))    # corner at origin
 Cylinder(10, 20, align=(Align.CENTER, Align.CENTER, Align.MIN))  # bottom at Z=0
 ```
 
-## Section 2: 致命陷阱
+## Section 2: 常见语义差异
 
 ### 陷阱 1: extrude() 默认 Mode.ADD
 

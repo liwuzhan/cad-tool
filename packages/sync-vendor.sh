@@ -18,12 +18,21 @@ cp "$ROOT/plugin/cad-studio/cad-studio-plugin.mjs" "$ROOT/packages/dsh-cad-studi
 node "$ROOT/packages/dsh-cad-client/build.mjs"
 
 mkdir -p \
+  "$ROOT/plugin/cad-studio/skills/cad-modeling/references" \
   "$ROOT/plugins/cad-tool/skills/cad-modeling/references" \
   "$ROOT/packages/dsh-cad-preset/skills/cad-modeling/references"
+cp "$ROOT/plugin/cad-studio/skills/cad-modeling/SKILL.md" "$ROOT/packages/dsh-cad-preset/skills/cad-modeling/SKILL.md"
+cp "$ROOT/plugin/cad-studio/skills/cad-checkpoint/SKILL.md" "$ROOT/packages/dsh-cad-preset/skills/cad-checkpoint/SKILL.md"
+cp "$ROOT/plugin/cad-studio/skills/cad-build123d-reference/SKILL.md" "$ROOT/packages/dsh-cad-preset/skills/cad-build123d-reference/SKILL.md"
+cp "$ROOT/docs/assembly_workflow.md" "$ROOT/plugin/cad-studio/skills/cad-modeling/references/assemblies.md"
 cp "$ROOT/docs/assembly_workflow.md" "$ROOT/plugins/cad-tool/skills/cad-modeling/references/assemblies.md"
 cp "$ROOT/docs/assembly_workflow.md" "$ROOT/packages/dsh-cad-preset/skills/cad-modeling/references/assemblies.md"
+cp "$ROOT/docs/review_drawing.md" "$ROOT/plugin/cad-studio/skills/cad-modeling/references/review_drawing.md"
 cp "$ROOT/docs/review_drawing.md" "$ROOT/plugins/cad-tool/skills/cad-modeling/references/review_drawing.md"
 cp "$ROOT/docs/review_drawing.md" "$ROOT/packages/dsh-cad-preset/skills/cad-modeling/references/review_drawing.md"
+cp "$ROOT/docs/model_walkthrough.md" "$ROOT/plugin/cad-studio/skills/cad-modeling/references/model_walkthrough.md"
+cp "$ROOT/docs/model_walkthrough.md" "$ROOT/plugins/cad-tool/skills/cad-modeling/references/model_walkthrough.md"
+cp "$ROOT/docs/model_walkthrough.md" "$ROOT/packages/dsh-cad-preset/skills/cad-modeling/references/model_walkthrough.md"
 
 for dest in "${CLI_DESTS[@]}"; do
   echo "[sync-vendor] src/ -> $dest"

@@ -1,147 +1,47 @@
 ---
 name: cad-checkpoint
-description: Checkpoint 特征级验证系统用法。在每个建模特征后断言体积/实体数/边界框并 verify()；这是捕获布尔运算错误的可靠手段。与 cad_run 的 checkpoints 返回结构配套使用。
+description: 在难以观察的 build123d 特征附近按需放置 Checkpoint 数值探针，检查体积、实体数、面数或边界框变化；简单模型通常不需要。
 ---
-# Checkpoint System - Quick Start
 
-## What is it?
+# Checkpoint 数值探针
 
-Checkpoint 是一个**特征级验证系统**，让你在每个建模步骤后立即验证结果是否符合预期。
-
-类似于编程中的断言（assert），但用于 CAD 特征。
-
-## Why use it?
-
-**传统方式**：
-```python
-# 创建复杂模型
-# ... 100 行代码 ...
-
-# 最后验证
-cad validate
-# ❌ 错误！但不知道是哪一步出了问题
-```
-
-**使用 Checkpoint**:
-```python
-from cad_cli.feedback import Checkpoint
-
-# 步骤 1
-Cylinder(30, 10)
-Checkpoint(part).expect_volume(28274, tolerance=100).verify()
-# ✓ 通过
-
-# 步骤 2
-Cylinder(10, 10, mode=Mode.SUBTRACT)
-Checkpoint(part).expect_volume_decreased().verify()
-# ❌ 失败！立即知道是步骤 2 出了问题
-```
-
-## Basic Example
+Checkpoint 是可选的特征级观察手段，适合复杂布尔、循环特征或关键尺寸。它提供局部证据，
+不替代模型对源码、渲染图和最终几何的判断，也不要求每个特征都放置。
 
 ```python
 from build123d import *
 from cad_cli.feedback import Checkpoint
 
-Checkpoint.reset()  # 开始前重置
+Checkpoint.reset()
 
 with BuildPart() as part:
-    # 创建基础圆柱
     Cylinder(30, 10)
     Checkpoint(part, "base") \
-        .expect_volume(28274, tolerance=100) \
-        .expect_solids(1) \
+        .expect_bbox_size(60, 60, 10, tolerance=1) \
         .verify()
 
-    # 减去孔
     Cylinder(10, 10, mode=Mode.SUBTRACT)
     Checkpoint(part, "after_hole") \
         .expect_volume_decreased() \
-        .expect_faces(4) \
+        .expect_solids(1) \
         .verify()
 
 result = part.part
 ```
 
-## Quick API Reference
+## 可用检查
 
-### 体积检查
 ```python
 .expect_volume(expected, tolerance=1.0)
 .expect_volume_decreased(min_decrease=0.1)
 .expect_volume_increased(min_increase=0.1)
-```
-
-### 拓扑检查
-```python
 .expect_faces(expected)
 .expect_faces_increased(min_increase=1)
 .expect_solids(expected)
-```
-
-### 边界框检查
-```python
 .expect_bbox_size(x, y, z, tolerance=1.0)
 .expect_bbox_within(x_range, y_range, z_range)
+.verify(raise_on_fail=True)
 ```
 
-### 执行
-```python
-.verify(raise_on_fail=True)  # 抛出异常（默认）
-.verify(raise_on_fail=False)  # 仅返回结果
-```
-
-## Real Example: Catching Gear Error
-
-完整代码见 `examples/gear_wrong_with_checkpoints.py`
-
-```python
-with BuildPart() as gear:
-    Cylinder(outer_radius, thickness)
-    Checkpoint(gear, "base").expect_volume(34000, tolerance=500).verify()
-
-    for i in range(num_teeth):
-        # 错误的代码：extrude 在 BuildPart 中默认 ADD
-        cut_part = extrude(cut_sketch.sketch, amount=thickness)
-
-        # Checkpoint 立即捕捉错误！
-        Checkpoint(gear, f"after_extrude_{i}") \
-            .expect_volume_decreased() \
-            .verify()
-        # AssertionError: Volume increased by 186mm³, expected decrease!
-```
-
-**输出**:
-```json
-{
-  "event": "checkpoint_failed",
-  "payload": {
-    "name": "after_extrude_0",
-    "checks": [{
-      "passed": false,
-      "message": "Volume change: 34211.94 -> 34398.14 (Δ=186.20)"
-    }]
-  }
-}
-```
-
-## When to Use
-
-✅ **使用 Checkpoint**:
-- 复杂的布尔运算
-- 循环中的特征操作
-- 关键尺寸验证
-- 调试新模型
-
-❌ **不需要 Checkpoint**:
-- 简单的单一特征
-- 经过充分测试的模板
-
-## Documentation
-
-完整文档：`docs/checkpoint_system.md`
-
-## Examples
-
-- `examples/gear_with_checkpoints.py` - 正确的齿轮（带验证）
-- `examples/gear_wrong_with_checkpoints.py` - 错误检测演示
+`cad_run` 会在结构化结果中返回探针名称、检查项和通过状态。断言失败时，可修改预期、删除
+已经失去价值的探针，或直接检查对应源码与几何；不要为了消除报警而改变本来正确的设计。
