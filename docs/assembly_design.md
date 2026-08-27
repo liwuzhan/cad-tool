@@ -120,7 +120,10 @@ with BuildPart() as asm:
 - deps 支持**两类条目**：`pkg:`（引用既有 .456d 包的 STEP，pin commit）与
   `std:`（引用标准件库参数化族，见 `docs/parts_library_design.md`——零件库先行，
   是装配的依赖底座与 LLM 上下文压缩器）。两类对装配脚本等价（都解析成
-  `.deps/<name>/model.step`）。
+  `.deps/<name>/model.step`）。`std.lib` 的物理来源 = 工作区内联/姐妹仓
+  `cad-parts`（[github.com/liwuzhan/cad-parts](https://github.com/liwuzhan/cad-parts)，
+  `install.sh` 与 `cad_env_bootstrap` 自动探测安装的软依赖），或任何提供
+  `cadparts` 包的 venv。
 - deps 的 `name` 是装配脚本内引用名；`pkg.commit` 必填、`std.params` 必须完整
   （不允许"最新"——见反模式 A5）。
 

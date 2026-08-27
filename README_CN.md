@@ -91,6 +91,12 @@ bash install.sh          # macOS / Linux
 （约下载 300MB：build123d + OCP + pyvista），自带冒烟验证，
 不污染全局 site-packages。
 
+**可选联动**：把 [cad-parts](https://github.com/liwuzhan/cad-parts) 参数化标准件库
+clone 到本仓库同级（或用 `CAD_PARTS_ROOT=/path` 指定），`install.sh` 与 DSH 插件的
+`cad_env_bootstrap` 会自动探测并作为软依赖装进同一 venv。不装也能正常使用；
+装上后建模脚本可直接 `from cadparts import gear, deep_groove_bearing, ...`，
+并用 `cadparts` CLI 查询标准件目录。
+
 ### AI 代装（复制粘贴给语言模型）
 
 把下面这段话发给任意编程助手（Claude Code / DSH / Cursor ...），

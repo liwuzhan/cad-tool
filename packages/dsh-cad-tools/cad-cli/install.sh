@@ -65,6 +65,16 @@ say "3/5 安装依赖（build123d/OCP 约 200–400MB，请耐心）..."
 python -m pip install --upgrade pip >/dev/null
 pip install -e "$REPO_ROOT" || die "pip install 失败；可重试或换镜像：PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple bash install.sh"
 
+# ---------- 3.5 可选联动：cad-parts 标准件库（软依赖，存在才装）----------
+# 姐妹仓布局（cad-tool 与 cad-parts 同级 clone）或工作区内联布局都会被探测到；
+# 也可用 CAD_PARTS_ROOT=/path/to/cad-parts 显式指定。未找到则静默跳过，不影响 CLI。
+for parts_dir in "${CAD_PARTS_ROOT:-}" "$REPO_ROOT/cad-parts" "$REPO_ROOT/../cad-parts"; do
+  [[ -n "$parts_dir" && -f "$parts_dir/src/cadparts/__init__.py" ]] || continue
+  say "3.5/5 检测到标准件库 cad-parts（$parts_dir），联动安装..."
+  pip install -e "$parts_dir" || warn "cad-parts 安装失败（不影响 CAD CLI，可稍后手动 pip install -e）"
+  break
+done
+
 # ---------- 4. 冒烟验证 ----------
 say "4/5 冒烟验证..."
 cad --help >/dev/null 2>&1 || die "cad 命令不可用——安装异常，请把上方 pip 输出反馈给维护者"

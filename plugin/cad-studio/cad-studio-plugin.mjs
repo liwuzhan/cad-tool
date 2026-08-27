@@ -682,6 +682,27 @@ export default {
             const needInstall = args.upgrade || !exists;
             if (needInstall) await step("pip-install", [venvPython, "-m", "pip", "install", "-e", cliRoot], cliRoot);
           }
+          // 可选联动：cad-parts 标准件库（软依赖；工作区内联/姐妹仓存在才装，失败不阻断 bootstrap）
+          {
+            const partsCandidates = [
+              process.env && text(process.env.CAD_PARTS_ROOT),
+              join(ws, "cad-parts"),
+              join(ws, "..", "cad-parts"),
+              join(cliRoot, "..", "cad-parts"),
+            ].filter(Boolean);
+            const partsRoot = partsCandidates.find((p) => existsSync(join(p, "src", "cadparts", "__init__.py")));
+            if (partsRoot) {
+              try {
+                await step("pip-install-cad-parts", [venvPython, "-m", "pip", "install", "-e", partsRoot], partsRoot);
+              } catch {
+                const last = steps[steps.length - 1];
+                if (last && last.phase === "pip-install-cad-parts") {
+                  last.status = "warn";
+                  last.detail = "可选依赖安装失败，已忽略（不影响 cad_* 工具）";
+                }
+              }
+            }
+          }
           await step("smoke-cli", [venvPython, "-m", "cad_cli", "--help"], ws);
           await step("smoke-import", [venvPython, "-c", ENV_PROBE], ws);
           return { ok: true, venv: { path: venvDir, exists: true }, steps, smoke: { cli_ok: true, import_ok: true } };

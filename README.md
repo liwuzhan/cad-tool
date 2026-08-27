@@ -57,6 +57,13 @@ The script needs **Python 3.11–3.14**, creates an isolated `.venv` inside the 
 (~300 MB download: build123d + OCP + pyvista), verifies the install with a smoke
 test, and never touches your global site-packages.
 
+**Optional:** clone the [cad-parts](https://github.com/liwuzhan/cad-parts)
+parametric standard-parts library next to this repo — `install.sh` (and the DSH
+plugin's `cad_env_bootstrap`) auto-detects and installs it as a soft dependency
+(`CAD_PARTS_ROOT=/path` to override). Everything works without it; with it,
+model scripts can directly `from cadparts import gear, deep_groove_bearing, ...`
+and query the catalog via the `cadparts` CLI.
+
 ### AI-assisted install
 
 Paste this prompt to any coding agent (Claude Code, DSH, Cursor, ...) — it can
