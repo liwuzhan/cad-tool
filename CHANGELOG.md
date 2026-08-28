@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## 0.1.0-alpha.3 (2026-08-28)
+
+- 增加模型主导的装配工作流：标准件由可选 `cad-parts` 提供采购代理和接口坐标，
+  非标件继续由模型直接建模；安装失败不影响核心 CAD CLI。
+- 新增按需使用的 Review 图纸，支持尺寸、接口标签、剖面与局部探针，作为多模态复核辅助，
+  不把程序报警设为装配质量门禁。
+- CAD Skill 与 Agent 提示改为模型主导，移除过时的强制流程，增加轮毂和轴承座装配范例。
+- `.456d` 工程包扫描支持工作区根目录及下一层目录，模型示例统一归入 `models/`。
+
+## 0.1.0-alpha.2 (2026-08-27)
+
 - 插件自包含：`@deepseek-ai/dsh-cad-tools` v0.1.0-alpha.2 vendored CLI（`cad-cli/`
   随 npm 包分发，396KB）；`locateCliRoot` 支持 npm lib 形态（`PLUGIN_DIR/../cad-cli`），
   无工作区源码的机器 bootstrap 也可直接 `pip install -e` 自带副本；新增

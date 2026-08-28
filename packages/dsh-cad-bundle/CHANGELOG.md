@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.0-alpha.3 (2026-08-28)
+- 对齐包含装配、Review 图纸、`cad-parts` 联动与嵌套工程扫描的 `dsh-cad-tools` alpha.3。
+
 ## 0.1.0-alpha.2 (2026-08-27)
 - 对齐自带完整 Python CLI 的 `dsh-cad-tools` alpha.2。
 

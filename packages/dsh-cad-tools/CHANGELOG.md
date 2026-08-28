@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0-alpha.3 (2026-08-28)
+- 增加模型主导的装配工作流、可选 `cad-parts` 标准件联动和 Review 标注图。
+- 工程包扫描支持工作区根目录及其下一层目录，兼容统一的 `models/` 布局。
+- 精简 CAD Skill 与 Agent 提示，保留可跳过的零件和装配范例。
+
 ## 0.1.0-alpha.2 (2026-08-17)
 - **自包含：vendored CLI**——`cad-cli/`（src/cad_cli + pyproject + install 脚本，
   396KB 源码 / 72KB tarball）随 npm 包分发；`locateCliRoot` 新增

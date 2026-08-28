@@ -6,7 +6,7 @@ The storefront target is the self-contained package at
 `packages/dsh-cad-studio`. Its `dsh.bundle` patch inserts one profile row, and
 the same package declares the browser client and includes the Python CLI.
 
-Tagging a version such as `v0.1.0-alpha.2` runs the release workflow and
+Tagging a version such as `v0.1.0-alpha.3` runs the release workflow and
 attaches `dsh-cad-studio.tgz` to the GitHub Release. The ready-to-copy
 awesome-dsh-plugin entry is under `release/awesome-dsh-plugin/`.
 

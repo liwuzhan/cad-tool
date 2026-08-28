@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.0-alpha.3 (2026-08-28)
+- 增加模型主导的装配说明、Review 图纸说明和两个可跳过的建模范例。
+- 对齐支持 `cad-parts` 与嵌套工程扫描的 `dsh-cad-tools` alpha.3。
+
 ## 0.1.0-alpha.2 (2026-08-27)
 - 对齐自带完整 Python CLI 的 `dsh-cad-tools` alpha.2。
 
