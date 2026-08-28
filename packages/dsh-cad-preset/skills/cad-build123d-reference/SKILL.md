@@ -30,7 +30,7 @@ with BuildSketch():
     RegularPolygon(15, 6)                # hexagon inscribed in r=15
     Polygon([(0,0), (10,0), (5,8)])      # triangle from points
     Trapezoid(30, 15, 70)                # width=30, height=15, angle=70°
-    RoundedRectangle(30, 20, 3)          # rectangle with r=3 fillets
+    RectangleRounded(30, 20, 3)          # rectangle with r=3 fillets
     SlotOverall(20, 5)                   # total length=20, width=5
     SlotCenterToCenter(30, 5)            # center-to-center=30, width=5
     SlotCenterPoint(20, (5, 0))          # width=20, center at (5,0)
@@ -113,8 +113,17 @@ section(plane=Plane.XY.offset(5))        # cross-section at Z=5
 with Locations([(10, 20), (-10, 20)]):   # custom positions
     Circle(3, mode=Mode.SUBTRACT)
 
+# Rotation is a transform, not a context manager; compose it into Locations.
+with Locations(Pos(10, 20, 0) * Rotation(0, 0, 45)):
+    Rectangle(8, 3)
+
 with PolarLocations(radius=25, count=6, start_angle=0, angular_range=360):
     Circle(4, mode=Mode.SUBTRACT)        # 6 holes on r=25 circle
+
+# Nest the array inside Locations when the array center itself is offset.
+with Locations((40, 10)):
+    with PolarLocations(radius=12, count=4):
+        Circle(2, mode=Mode.SUBTRACT)
 
 with GridLocations(x_spacing=20, y_spacing=20, x_count=3, y_count=3):
     Circle(2, mode=Mode.SUBTRACT)        # 3x3 grid
@@ -134,7 +143,7 @@ solids()         # all solids
 
 # Filter by axis/direction
 edges().filter_by(Axis.Z)               # parallel to Z
-edges().filter_by(GeType.LINE)          # straight edges
+edges().filter_by(GeomType.LINE)        # straight edges
 
 # Sort by position
 faces().sort_by(Axis.X)[-1]             # rightmost face (max X)
@@ -359,7 +368,7 @@ edges().sort_by(Axis.Z)[-1]                   # topmost edge
 faces().sort_by(Axis.Z)[-1]                   # top face (max Z)
 faces().sort_by(Axis.X)[0]                    # leftmost face (min X)
 faces() > 100                                 # faces with area > 100
-faces().filter_by(GeType.PLANE)               # planar faces only
+faces().filter_by(GeomType.PLANE)             # planar faces only
 
 # Grouping (list of groups)
 groups = edges().group_by(Axis.Z)

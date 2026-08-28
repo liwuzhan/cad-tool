@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- 修正 build123d 0.11 参考文档中的 API 名称：`RectangleRounded`、`GeomType`，并补充
+  `Rotation` 组合变换与偏移阵列的嵌套 `Locations` 用法。
+
 ## 0.1.0-alpha.3 (2026-08-28)
 
 - 增加模型主导的装配工作流：标准件由可选 `cad-parts` 提供采购代理和接口坐标，
