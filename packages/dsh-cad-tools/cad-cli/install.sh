@@ -70,7 +70,7 @@ pip install -e "$REPO_ROOT" || die "pip install 失败；可重试或换镜像�
 # 也可用 CAD_PARTS_ROOT=/path/to/cad-parts 显式指定。未找到则静默跳过，不影响 CLI。
 for parts_dir in "${CAD_PARTS_ROOT:-}" "$REPO_ROOT/cad-parts" "$REPO_ROOT/../cad-parts"; do
   [[ -n "$parts_dir" && -f "$parts_dir/src/cadparts/__init__.py" ]] || continue
-  say "3.5/5 检测到标准件库 cad-parts（$parts_dir），联动安装..."
+  say "3.5/5 检测到标准件库 cad-parts（${parts_dir}），联动安装..."
   pip install -e "$parts_dir" || warn "cad-parts 安装失败（不影响 CAD CLI，可稍后手动 pip install -e）"
   break
 done
