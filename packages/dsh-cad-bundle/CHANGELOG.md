@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.0-alpha.4 (2026-08-28)
+- 对齐包含 macOS Bash 3.2 安装修复的 `dsh-cad-tools` alpha.4。
+
 ## 0.1.0-alpha.3 (2026-08-28)
 - 对齐包含装配、Review 图纸、`cad-parts` 联动与嵌套工程扫描的 `dsh-cad-tools` alpha.3。
 

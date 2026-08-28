@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.0-alpha.4 (2026-08-28)
+- 修复 macOS Bash 3.2 在检测到 `cad-parts` 时对 `$parts_dir` 的变量边界解析错误，
+  并同步更新 vendored CLI 安装器。
+
 ## 0.1.0-alpha.3 (2026-08-28)
 - 增加模型主导的装配工作流、可选 `cad-parts` 标准件联动和 Review 标注图。
 - 工程包扫描支持工作区根目录及其下一层目录，兼容统一的 `models/` 布局。

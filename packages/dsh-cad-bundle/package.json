@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-cad-bundle",
   "description": "CAD \u5de5\u573a profile bundle\uff1a\u628a dsh-cad-tools\uff08Host\uff09\u4e0e dsh-cad-client\uff08Client \u9884\u89c8\uff09\u63d2\u5165\u4efb\u610f dsh profile \u7ec4\u5408",
-  "version": "0.1.0-alpha.3",
+  "version": "0.1.0-alpha.4",
   "type": "module",
   "exports": {
     "./cordis.patch.yml": "./cordis.patch.yml",
@@ -19,7 +19,7 @@
     }
   },
   "dependencies": {
-    "@deepseek-ai/dsh-cad-tools": "0.1.0-alpha.3",
+    "@deepseek-ai/dsh-cad-tools": "0.1.0-alpha.4",
     "@deepseek-ai/dsh-cad-client": "0.1.0-alpha.1"
   }
 }

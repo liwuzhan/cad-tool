@@ -1,6 +1,6 @@
 {
   "name": "dsh-cad-studio",
-  "version": "0.1.0-alpha.3",
+  "version": "0.1.0-alpha.4",
   "description": "DSH plugin for AI-driven parametric CAD modeling, validation, rendering, versioning, and STEP/STL export",
   "type": "module",
   "main": "lib/index.js",

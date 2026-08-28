@@ -2,8 +2,12 @@
 
 ## Unreleased
 
+## 0.1.0-alpha.4 (2026-08-28)
+
 - 修正 build123d 0.11 参考文档中的 API 名称：`RectangleRounded`、`GeomType`，并补充
   `Rotation` 组合变换与偏移阵列的嵌套 `Locations` 用法。
+- 修复 macOS 自带 Bash 3.2 在全角括号前错误扩展 `$parts_dir` 变量名，导致检测到
+  `cad-parts` 后安装脚本在冒烟验证前退出的问题；同步修复根安装器和全部分发副本。
 
 ## 0.1.0-alpha.3 (2026-08-28)
 

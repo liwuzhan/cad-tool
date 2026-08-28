@@ -15,7 +15,7 @@ curl -fL https://github.com/liwuzhan/cad-tool/releases/latest/download/dsh-cad-s
 dsh plugin --profile <profile> add ./dsh-cad-studio.tgz
 ```
 
-Tagging a version such as `v0.1.0-alpha.3` runs the release workflow and
+Tagging a version such as `v0.1.0-alpha.4` runs the release workflow and
 attaches `dsh-cad-studio.tgz` to the GitHub Release. The ready-to-copy
 awesome-dsh-plugin entry is under `release/awesome-dsh-plugin/`.
 

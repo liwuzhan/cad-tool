@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0-alpha.4 (2026-08-28)
+
+- Fix the macOS Bash 3.2 variable-boundary failure when optional `cad-parts` is detected.
+- Ship the corrected installer in the self-contained DSH release tarball.
+
 ## 0.1.0-alpha.3 (2026-08-28)
 
 - Add the model-first assembly workflow and optional `cad-parts` integration.
