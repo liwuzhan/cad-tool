@@ -10,12 +10,26 @@ Self-contained DSH plugin for the CAD Tool workflow. One install supplies:
 
 ## Install
 
-From the DSH plugin marketplace, choose **CAD Studio**. For a local tarball or
-registry build, add the single package to the target profile:
+The plugin is not yet listed in the DSH marketplace. Download the newest
+GitHub Release and add the tarball to the target profile:
 
 ```bash
-dsh plugin --profile <profile> add -w dsh-cad-studio
+# macOS / Linux
+curl -fL https://github.com/liwuzhan/cad-tool/releases/latest/download/dsh-cad-studio.tgz \
+  -o dsh-cad-studio.tgz
+dsh plugin --profile <profile> add ./dsh-cad-studio.tgz
 ```
+
+```powershell
+# Windows PowerShell
+Invoke-WebRequest `
+  -Uri https://github.com/liwuzhan/cad-tool/releases/latest/download/dsh-cad-studio.tgz `
+  -OutFile dsh-cad-studio.tgz
+dsh plugin --profile <profile> add ./dsh-cad-studio.tgz
+```
+
+The `latest` URL always resolves to the newest published package. After the
+marketplace entry is accepted, **CAD Studio** can also be installed there.
 
 Start a new session after installation, then call `cad_env_status`. If the
 isolated Python environment is not ready, approve `cad_env_bootstrap` once.

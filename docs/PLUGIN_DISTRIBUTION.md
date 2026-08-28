@@ -6,6 +6,15 @@ The storefront target is the self-contained package at
 `packages/dsh-cad-studio`. Its `dsh.bundle` patch inserts one profile row, and
 the same package declares the browser client and includes the Python CLI.
 
+Until the storefront entry is accepted, users install the newest GitHub
+Release directly:
+
+```bash
+curl -fL https://github.com/liwuzhan/cad-tool/releases/latest/download/dsh-cad-studio.tgz \
+  -o dsh-cad-studio.tgz
+dsh plugin --profile <profile> add ./dsh-cad-studio.tgz
+```
+
 Tagging a version such as `v0.1.0-alpha.3` runs the release workflow and
 attaches `dsh-cad-studio.tgz` to the GitHub Release. The ready-to-copy
 awesome-dsh-plugin entry is under `release/awesome-dsh-plugin/`.

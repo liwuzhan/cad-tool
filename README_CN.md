@@ -67,13 +67,27 @@ codex plugin add cad-tool@cad-tool
 
 ### DSH 插件包
 
-商店发行包位于 `packages/dsh-cad-studio`，一个 tarball 同时包含 16 个 Host
-工具、浏览器结果卡和完整 Python CLI。在商店条目合并前，可用 Release tarball
-或本地打包结果安装：
+统一包同时包含 16 个 Host 工具、浏览器结果卡和完整 Python CLI。目前插件还没有
+被 DSH 商店收录，请直接安装 GitHub 上最新的 Release：
 
 ```bash
-dsh plugin --profile <profile> add -w dsh-cad-studio
+# macOS / Linux
+curl -fL https://github.com/liwuzhan/cad-tool/releases/latest/download/dsh-cad-studio.tgz \
+  -o dsh-cad-studio.tgz
+dsh plugin --profile <profile> add ./dsh-cad-studio.tgz
 ```
+
+```powershell
+# Windows PowerShell
+Invoke-WebRequest `
+  -Uri https://github.com/liwuzhan/cad-tool/releases/latest/download/dsh-cad-studio.tgz `
+  -OutFile dsh-cad-studio.tgz
+dsh plugin --profile <profile> add ./dsh-cad-studio.tgz
+```
+
+`latest` 地址始终指向最新发布包。商店条目通过后，也可以直接在 DSH 插件商店中
+安装 **CAD Studio**。发行包源码位于
+[`packages/dsh-cad-studio`](packages/dsh-cad-studio)。
 
 在平台渲染器无法生成 PNG 的无头自动化环境中，可设置
 `CAD_SKIP_RENDER=1`。提交仍会完成几何检查并保存 STEP、指标、验证结果和版本
