@@ -34,14 +34,29 @@ creating the isolated dependency environment.
 
 ### DSH plugin package
 
-The self-contained storefront package is `packages/dsh-cad-studio`. It carries
-the 16 Host tools, browser result cards, and the complete Python CLI in one
-tarball. Until the marketplace entry is merged, install a release tarball or a
-local pack with:
+The self-contained package carries the 16 Host tools, browser result cards, and
+the complete Python CLI in one tarball. The plugin is not yet listed in the DSH
+marketplace, so install the newest GitHub Release directly:
 
 ```bash
-dsh plugin --profile <profile> add -w dsh-cad-studio
+# macOS / Linux
+curl -fL https://github.com/liwuzhan/cad-tool/releases/latest/download/dsh-cad-studio.tgz \
+  -o dsh-cad-studio.tgz
+dsh plugin --profile <profile> add ./dsh-cad-studio.tgz
 ```
+
+```powershell
+# Windows PowerShell
+Invoke-WebRequest `
+  -Uri https://github.com/liwuzhan/cad-tool/releases/latest/download/dsh-cad-studio.tgz `
+  -OutFile dsh-cad-studio.tgz
+dsh plugin --profile <profile> add ./dsh-cad-studio.tgz
+```
+
+The `latest` URL always follows the newest published package. After the
+marketplace entry is accepted, **CAD Studio** can also be installed from the
+DSH plugin marketplace. The package source remains at
+[`packages/dsh-cad-studio`](packages/dsh-cad-studio).
 
 Headless Linux automatically uses a process-safe Matplotlib renderer and colors
 assembly solids separately. On unstable Windows remote/screen-off sessions, set
