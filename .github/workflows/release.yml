@@ -60,7 +60,7 @@ jobs:
           mkdir -p dist
           npm pack ./packages/dsh-cad-studio --offline --ignore-scripts --pack-destination dist
           mv dist/dsh-cad-studio-*.tgz dist/dsh-cad-studio.tgz
-          sha256sum dist/dsh-cad-studio.tgz > dist/SHA256SUMS
+          (cd dist && sha256sum dsh-cad-studio.tgz > SHA256SUMS)
       - uses: actions/upload-artifact@v4
         with:
           name: dsh-cad-studio
