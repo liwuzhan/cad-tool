@@ -1,0 +1,27 @@
+{
+  "name": "二级齿轮减速箱",
+  "kind": "assembly",
+  "version": "2.0.0",
+  "created": "2026-08-28T04:35:39.481394",
+  "head": "06d0d7087888",
+  "branches": {
+    "main": "06d0d7087888"
+  },
+  "current_branch": "main",
+  "artifact_policy": "latest_per_branch",
+  "unit": "mm",
+  "timeout_seconds": 60,
+  "render": {
+    "default_views": [
+      "top",
+      "front",
+      "right",
+      "iso"
+    ],
+    "image_format": "png",
+    "resolution": [
+      800,
+      600
+    ]
+  }
+}

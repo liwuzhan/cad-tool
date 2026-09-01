@@ -1,0 +1,27 @@
+{
+  "name": "人体工学鼠标外壳",
+  "kind": "part",
+  "version": "2.0.0",
+  "created": "2026-08-28T04:15:54.430706",
+  "head": "e5e8ed14228c",
+  "branches": {
+    "main": "e5e8ed14228c"
+  },
+  "current_branch": "main",
+  "artifact_policy": "latest_per_branch",
+  "unit": "mm",
+  "timeout_seconds": 60,
+  "render": {
+    "default_views": [
+      "top",
+      "front",
+      "right",
+      "iso"
+    ],
+    "image_format": "png",
+    "resolution": [
+      800,
+      600
+    ]
+  }
+}

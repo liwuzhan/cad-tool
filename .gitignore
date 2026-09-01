@@ -62,3 +62,6 @@ Thumbs.db
 *.swo
 *~
 cad-parts.zip
+
+# CAD parts library review scratch (not for git)
+/parts_review/
