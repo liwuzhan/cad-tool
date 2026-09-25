@@ -167,13 +167,18 @@ const metricsSchema = {
 const freeObject = { type: "object" };
 
 export const name = "cad-studio";
-export const inject = ["tools"];
+export const inject = ["tools", "subprocess"];
 
 export default {
   inject,
   apply(ctx, config) {
     const tools = ctx.tools;
-    const subprocess = ctx.get("subprocess");
+    const subprocessAtApply = ctx.get("subprocess");
+    // The subprocess seam is declared in `inject` above, but cordis may still call apply()
+    // before the provider registers. Re-read the seam on every use and only fall back to the
+    // value captured at apply time, so an early apply no longer caches `undefined` forever
+    // (which made every cad_* tool fail with E-INFRA "subprocess 服务不可用").
+    const subprocessNow = () => ctx.get("subprocess") || subprocessAtApply || null;
     const sandbox = ctx.get("sandbox");
     const sandboxPolicy = ctx.get("sandboxPolicy");
     const jobs = ctx.get("jobs");
@@ -279,6 +284,7 @@ export default {
      */
     async function spawnCollect(argv, opts) {
       opts = opts || {};
+      const subprocess = subprocessNow();
       if (!subprocess) {
         throw new CadError("E-INFRA", "subprocess 服务不可用", "本插件依赖 DSH Host 的 subprocess capability seam");
       }
