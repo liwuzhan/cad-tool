@@ -792,8 +792,29 @@ def branch_delete(name, force):
         emit_event("branch_delete_success", deleted_info)
 
 
+def _force_utf8_stdout() -> None:
+    """Force UTF-8 on stdout/stderr so non-ASCII output never crashes the CLI.
+
+    On Windows, both consoles and pipes default to the legacy ANSI code page
+    (cp936/GBK here).  The event payloads contain characters outside it --
+    U+00B3 in "mm³", U+00B2 in "mm²", U+00B7 in "·" -- so ``print()`` raises
+    ``UnicodeEncodeError`` and the command dies with a traceback instead of
+    emitting its result.  The consumer is a UTF-8 reader, so emit UTF-8 and
+    replace anything the sink still cannot represent.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is None:
+            continue
+        try:
+            reconfigure(encoding="utf-8", errors="replace")
+        except (ValueError, OSError):
+            pass
+
+
 def main():
     """Main entry point"""
+    _force_utf8_stdout()
     cli()
 
 
