@@ -221,17 +221,22 @@ export default {
     function resolvePython(workspace, explicit) {
       const explicitPath = text(explicit) || text(process.env && process.env.CAD_PYTHON);
       if (explicitPath) return explicitPath;
-      const exe = process.platform === "win32" ? "python.exe" : "bin/python";
-      const candidates = [];
+      const exe = process.platform === "win32" ? "Scripts/python.exe" : "bin/python";
+      // Plugin-owned interpreters always win: `.cad-venv` walking up from the workspace, then the
+      // cache venv this plugin creates itself. A generic `.venv` is only a last resort, so an
+      // unrelated project venv can no longer shadow the CAD environment and make every tool report
+      // missing dependencies.
+      const dedicated = [];
+      const generic = [];
       let cur = workspace;
       while (true) {
-        candidates.push(join(cur, ".cad-venv", exe));
-        candidates.push(join(cur, ".venv", exe));
+        dedicated.push(join(cur, ".cad-venv", exe));
+        generic.push(join(cur, ".venv", exe));
         const parent = dirname(cur);
         if (parent === cur) break;
         cur = parent;
       }
-      candidates.push(join(homedir(), ".cache", "dsh-cad", "venv", exe));
+      const candidates = [...dedicated, join(homedir(), ".cache", "dsh-cad", "venv", exe), ...generic];
       for (const c of candidates) if (existsSync(c)) return c;
       return "python3";
     }
@@ -682,7 +687,7 @@ export default {
         const venvDir = channel === "conda"
           ? resolvePath(join(homedir(), ".cache", "dsh-cad"), "conda-env")
           : resolvePath(join(homedir(), ".cache", "dsh-cad"), "venv");
-        const exe = process.platform === "win32" ? "python.exe" : "bin/python";
+        const exe = process.platform === "win32" ? "Scripts/python.exe" : "bin/python";
         const venvPython = join(venvDir, exe);
 
         const work = async ({ signal, log }) => {
