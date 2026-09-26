@@ -78,6 +78,7 @@ result = part.part
 ```bash
 cad init <path> --name=<name>    # 创建模型包
 cad run [script]                  # 执行脚本（内存，不保存）
+cad mates                         # 判定装配接口图（不建几何，可先于建模运行）
 cad commit -m "msg"               # 执行+保存工件+记录历史
 cad validate                      # BRep 验证
 cad inspect --prop=volume         # 查询属性（volume/area/bounds/faces/edges）

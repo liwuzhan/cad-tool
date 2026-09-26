@@ -20,6 +20,10 @@ class CommitRecord:
     metrics_hash: Optional[str] = None
     has_step: bool = False
     has_thumbnails: bool = False
+    # P1: what happened to the script's assertions in this commit. Recorded, not
+    # enforced — see cad_cli.feedback.assertions for why a record is the useful
+    # artefact and a gate is not. Older commits simply have no such field.
+    assertion_delta: Optional[dict[str, Any]] = None
 
     REQUIRED_FIELDS = {"hash", "message", "timestamp", "script_path"}
 

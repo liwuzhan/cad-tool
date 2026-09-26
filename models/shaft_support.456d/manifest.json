@@ -3,9 +3,9 @@
   "kind": "assembly",
   "version": "2.0.0",
   "created": "2026-09-26T21:02:54.937210",
-  "head": null,
+  "head": "66b960eddad1",
   "branches": {
-    "main": null
+    "main": "66b960eddad1"
   },
   "current_branch": "main",
   "artifact_policy": "latest_per_branch",

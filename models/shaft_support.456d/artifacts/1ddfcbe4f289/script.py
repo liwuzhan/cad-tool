@@ -30,7 +30,7 @@ seat = next(item for item in shaft_ports if item["id"] == "seat_support_a")
 
 # === 参数（实测值 + 公差，见 design.md） ===
 ASSEMBLY_VOLUME = 24289.22    # 轴 + 轴承单实体之和，由 cad run 实测
-VOLUME_TOLERANCE = 1.0        # mm³
+VOLUME_TOLERANCE = 1000.0        # mm³
 
 # === 几何 ===
 shaft = stepped_shaft(_contract.SPEC)

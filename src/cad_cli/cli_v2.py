@@ -23,6 +23,7 @@ from .feedback.review_drawing import (
     render_review_drawings,
 )
 from .feedback.camera import STANDARD_VIEWS
+from .feedback.assertions import summarize as summarize_assertions
 from .utils.jsonl import emit_event
 from .utils.geometry import compute_metrics
 
@@ -179,11 +180,21 @@ def commit(message, script_path, views):
         emit_event("commit_error", {"error": error.to_dict()})
         sys.exit(1)
     else:
-        emit_event("commit_success", {
+        payload = {
             "hash": commit_record.hash,
             "message": commit_record.message,
             "timestamp": commit_record.timestamp
-        })
+        }
+        # P1: surface the assertion delta. Recording without showing it would be
+        # theatre — a loosened tolerance buried in a history file is exactly the
+        # change nobody goes looking for.
+        delta = getattr(commit_record, "assertion_delta", None)
+        if delta:
+            payload["assertion_delta"] = delta
+            note = summarize_assertions(delta)
+            if note:
+                payload["assertion_note"] = note
+        emit_event("commit_success", payload)
 
 
 @cli.command()

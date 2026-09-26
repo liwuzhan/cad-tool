@@ -45,6 +45,40 @@ result = stepped_shaft(spec)       # 半剖轮廓回转成单一实体
 键槽、挡圈槽、倒角、螺纹与材料同样不在范围内。轴是最容易形式化的一类非标件，优先用生成器
 而不是手画回转轮廓。
 
+## 装配接口判定：先于几何
+
+装配包的依赖与配对关系声明在 `manifest.json`，自建件的接口声明在同包 `ports.py`；
+`cad mates` 读这两处来判定接口是否配套，**不执行 `src/main.py`、不建任何实体**：
+
+```jsonc
+// manifest.json
+"deps":  [{ "name": "bearing_a", "std": { "family": "bearing.deep_groove",
+                                          "params": { "code": "6204" } } }],
+"mates": [{ "a": "shaft.seat_support_a", "b": "bearing_a.shaft_bore",
+            "why": "轴颈由该轴承轴孔尺寸决定" }]
+```
+
+```python
+# ports.py —— 只做声明，不要建模；PORTS 形状为 {实例名: [接口, ...]}
+PORTS = {"shaft": resolve_interfaces("shaft.stepped", {}, shaft_dimensions(SPEC))}
+```
+
+判定结果为**四档**，`UNKNOWN` 是一等结果而不是静默通过：
+
+| 判决 | 含义 |
+|---|---|
+| `PASS` | 公称相符 |
+| `WARN` | 装得上但公称尺寸不符（可能是间隙配合，也可能选错件——仅凭声明无法判定）|
+| `FAIL` | 装不进去 / 声明本身有错（引用不存在的实例或接口）|
+| `UNKNOWN` | 没有适用于该类型组合的规则，此项**未被验证** |
+
+输出还含**覆盖率**（哪些已声明接口没有任何 mate 引用，逐个列出）与**验证边界**
+（明说未查公差、强度、工艺、可达性）。**不要把 `PASS` 读成「全都验过了」。**
+
+这个检查的价值在于它是**跨声明的一致性检查**：`manifest` 说装 6205、`ports.py` 却按
+6204 给轴定尺寸时，它会报 `WARN` —— 两处本应一致的声明不再一致。所以改了型号记得
+两处都改，或者干脆让 `ports.py` 从同一处推导。
+
 ## 最少约定
 
 - 可编辑几何通常在 `<name>.456d/src/main.py`，最终 build123d 对象赋给 `result`。

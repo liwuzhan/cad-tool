@@ -14,6 +14,7 @@ from ..runtime.executor_v2 import ScriptExecutorV2
 from ..runtime.validator import GeometryValidator
 from ..feedback.renderer_v2 import OffscreenRendererV2
 from ..feedback.camera import STANDARD_VIEWS
+from ..feedback.assertions import AssertionSyntaxError, diff_assertions
 from ..utils.geometry import compute_metrics
 from ..vcs.commits import CommitRecord, generate_commit_hash
 
@@ -40,6 +41,42 @@ class BuildWorkflow:
         self.executor = ScriptExecutorV2(package)
         self.validator = GeometryValidator()
         self.renderer = OffscreenRendererV2(package)
+
+    def _assertion_delta(self, script_path: Path) -> Optional[dict]:
+        """Diff this script's assertions against the previous commit's snapshot.
+
+        Returns None when there is nothing useful to say, so the commit record
+        stays clean rather than carrying an empty structure on every commit.
+        """
+
+        try:
+            current_source = script_path.read_text(encoding="utf-8")
+        except OSError:
+            return None
+
+        parent = None
+        try:
+            from ..vcs.repository_v2 import Repository  # local import avoids a cycle
+            parent = Repository(self.package).get_head()
+        except Exception:
+            parent = None
+
+        previous_source = None
+        if parent is not None:
+            try:
+                previous_source = self.package.artifact_manager.load_script(parent.hash)
+            except Exception:
+                previous_source = None
+
+        try:
+            delta = diff_assertions(previous_source, current_source)
+        except AssertionSyntaxError as exc:
+            return {"available": False, "reason": str(exc)}
+
+        if delta.get("available") and not delta.get("first_commit") \
+                and not delta.get("added") and not delta.get("removed"):
+            return None  # unchanged; no need to record noise
+        return delta
 
     def build(
         self,
@@ -190,7 +227,14 @@ class BuildWorkflow:
         }
         self.package.artifact_manager.save_validation(commit_hash, validation_result)
 
-        # Step 8: Create commit record
+        # Step 8: Create commit record.
+        #
+        # P1: record what happened to the assertion set. Deliberately a record,
+        # not a gate — the assertions belong to whoever wrote the model, and
+        # blocking their revision would be a dead end the moment a constraint is
+        # wrong. The failure this guards against is not deletion but quiet
+        # loosening, so the delta is stored verbatim rather than as a flag.
+        assertion_delta = self._assertion_delta(script_path)
         commit_record = CommitRecord(
             hash=commit_hash,
             message=commit_message,
@@ -200,7 +244,8 @@ class BuildWorkflow:
             branch=manifest.current_branch,
             metrics_hash=None,  # Could add SHA256 of metrics in the future
             has_step=True,
-            has_thumbnails=len(thumbnails_created) > 0
+            has_thumbnails=len(thumbnails_created) > 0,
+            assertion_delta=assertion_delta,
         )
 
         # Step 9: Update manifest HEAD and branch head pointer
