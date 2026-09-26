@@ -9,6 +9,7 @@ import click
 from build123d import Shape
 
 from .package import ModelPackage
+from .package.mates import MateCheckError, check_package
 from .vcs.repository_v2 import Repository
 from .vcs.commits import CommitHistory
 from .runtime.executor_v2 import ScriptExecutorV2
@@ -208,6 +209,31 @@ def status():
 
     status_info = repo.status()
     emit_event("status_result", status_info)
+
+
+@cli.command()
+def mates():
+    """Evaluate declared mate relationships without building geometry
+
+    Reads manifest.json (deps, mates) and ports.py, then judges the interface
+    graph. No solid is built and no script is executed, so this can run before
+    the modelling step rather than after it. Exits non-zero only on FAIL;
+    WARN and UNKNOWN are reported in the payload.
+    """
+    package = find_or_error()
+    metadata = package.get_manifest()
+
+    try:
+        result = check_package(package.package_path, metadata)
+    except MateCheckError as exc:
+        emit_event("mates_error", {
+            "error": {"code": "E-MATES", "message": str(exc)}
+        })
+        sys.exit(1)
+
+    emit_event("mates_result", result)
+    if result.get("overall") == "FAIL":
+        sys.exit(1)
 
 
 @cli.command()

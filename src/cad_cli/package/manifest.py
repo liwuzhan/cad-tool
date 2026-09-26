@@ -20,6 +20,15 @@ class PackageMetadata:
     artifact_policy: str = "latest_per_branch"  # all_commits | latest_per_branch | releases_only
     unit: str = "mm"
     timeout_seconds: int = 60
+    # Declared dependencies and the interfaces they join on. Both live in the
+    # manifest rather than in src/main.py so the interface graph can be read and
+    # judged *without* executing the modelling script — that ordering is the
+    # whole point of a check that is meant to run before geometry exists.
+    #
+    # deps:  [{"name": "bearing_a", "std": {"family": ..., "params": {...}, "lib": ...}}]
+    # mates: [{"a": "shaft.seat_support_a", "b": "bearing_a.shaft_bore", "why": "..."}]
+    deps: list[dict[str, Any]] = field(default_factory=list)
+    mates: list[dict[str, Any]] = field(default_factory=list)
     render: dict[str, Any] = field(default_factory=lambda: {
         "default_views": ["top", "front", "right", "iso"],
         "image_format": "png",
