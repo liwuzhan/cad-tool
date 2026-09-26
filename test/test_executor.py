@@ -123,3 +123,52 @@ def test_execute_resolves_relative_script_before_changing_subprocess_cwd(package
 
     assert error is None
     assert shape.volume == pytest.approx(24)
+
+
+def test_executed_script_can_locate_itself_via_dunder_file(package):
+    """Scripts must be able to locate their own package without guessing cwd.
+
+    The runner exec()s the source, so __file__ has to be seeded explicitly.
+    Without it a script that needs a sibling file (ports.py, a data table) can
+    only rely on the process cwd, which is an implicit contract that breaks as
+    soon as the execution context changes.
+    """
+
+    script = package.src_dir / "locate.py"
+    script.write_text(
+        "from pathlib import Path\n"
+        "from build123d import *\n"
+        "assert Path(__file__).name == 'locate.py', __file__\n"
+        "assert Path(__file__).resolve().parent.name == 'src'\n"
+        "result = Box(1, 1, 1)\n"
+    )
+
+    executor = ScriptExecutorV2(package)
+    shape, error = executor.execute(script)
+
+    assert error is None, error
+    assert shape is not None
+
+
+def test_script_can_read_a_sibling_contract_file(package):
+    """The reason __file__ matters: reading the package's own declarations."""
+
+    (package.package_path / "ports.py").write_text("PORTS = {'p': []}\n", encoding="utf-8")
+    script = package.src_dir / "reads_contract.py"
+    script.write_text(
+        "import importlib.util\n"
+        "from pathlib import Path\n"
+        "from build123d import *\n"
+        "_p = Path(__file__).resolve().parents[1] / 'ports.py'\n"
+        "_s = importlib.util.spec_from_file_location('_c', _p)\n"
+        "_m = importlib.util.module_from_spec(_s)\n"
+        "_s.loader.exec_module(_m)\n"
+        "assert _m.PORTS == {'p': []}\n"
+        "result = Box(1, 1, 1)\n"
+    )
+
+    executor = ScriptExecutorV2(package)
+    shape, error = executor.execute(script)
+
+    assert error is None, error
+    assert shape is not None

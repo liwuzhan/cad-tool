@@ -42,7 +42,11 @@ try:
         Path(_ERROR).write_text(json.dumps({"type": "syntax", "line": _e.lineno or 0, "message": str(_e.msg or _e)}))
         sys.exit(1)
 
-    _ns = {}
+    # Scripts routinely need to locate their own package (to read ports.py, a
+    # sibling data file, or a vendored resource). Without __file__ the only
+    # handle left is the process cwd, which is an implicit contract that breaks
+    # the moment execution context changes. Provide the standard names instead.
+    _ns = {"__file__": _SCRIPT, "__name__": "__main__"}
     exec(_code, _ns)
 
     if "result" not in _ns:
