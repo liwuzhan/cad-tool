@@ -78,6 +78,54 @@ class BuildWorkflow:
             return None  # unchanged; no need to record noise
         return delta
 
+    def _resolve_render_views(self, render_views: Optional[list[str]]) -> list[str]:
+        """Apply the env kill switch and the manifest default, in that order."""
+
+        disabled = os.environ.get("CAD_SKIP_RENDER", "").strip().lower() in {
+            "1", "true", "yes", "on"
+        }
+        if disabled:
+            return []
+        if render_views is None:
+            return list(self.package.get_manifest().render.get("default_views", ["iso"]))
+        return list(render_views)
+
+    def _build_without_commit(
+        self,
+        shape: "Shape",
+        metrics,
+        render_views: Optional[list[str]],
+        script_path: Path,
+    ) -> tuple[None, None]:
+        """Report a working-state build: metrics plus any requested images.
+
+        Images land in ``runlog/`` rather than ``artifacts/<hash>/`` because there
+        is no commit to key them to — this is a look at the current state, not a
+        record of it.
+        """
+
+        from ..utils.jsonl import emit_event
+
+        images: list[str] = []
+        for view_name in self._resolve_render_views(render_views):
+            if view_name not in STANDARD_VIEWS:
+                continue
+            target = self.package.runlog_dir / f"render_{view_name}.png"
+            meta_target = self.package.runlog_dir / f"render_{view_name}.json"
+            try:
+                self.package.runlog_dir.mkdir(parents=True, exist_ok=True)
+                self.renderer.render(shape, STANDARD_VIEWS[view_name], target, meta_target)
+                images.append(str(target))
+            except Exception as exc:  # a failed view must not lose the metrics
+                emit_event("build_render_warning", {"view": view_name, "error": str(exc)})
+
+        emit_event("build_result", {
+            "script": str(script_path),
+            "metrics": metrics.to_dict() if hasattr(metrics, "to_dict") else metrics,
+            "images": images,
+        })
+        return None, None
+
     def build(
         self,
         script_path: Optional[Path] = None,
@@ -130,9 +178,15 @@ class BuildWorkflow:
         # Step 3: Compute metrics
         metrics = compute_metrics(shape)
 
-        # If no commit message, return here (just a build, not a commit)
+        # A build without a commit message must still be able to produce images.
+        # Returning here before rendering meant `cad build --views=...` accepted
+        # the option and silently did nothing — and because render/inspect/
+        # validate all require a commit, there was then no way to look at a model
+        # before committing it. That inverts the natural loop (write, look, fix,
+        # commit) and pushes throwaway "just to look" commits into the history,
+        # which also dilutes the assertion deltas recorded per commit.
         if commit_message is None:
-            return None, None
+            return self._build_without_commit(shape, metrics, render_views, script_path)
 
         # Generate commit
         timestamp = datetime.now()
@@ -169,13 +223,7 @@ class BuildWorkflow:
 
         # Step 5: Render thumbnails
         manifest = self.package.get_manifest()
-        render_disabled = os.environ.get("CAD_SKIP_RENDER", "").strip().lower() in {
-            "1", "true", "yes", "on"
-        }
-        if render_disabled:
-            render_views = []
-        elif render_views is None:
-            render_views = manifest.render.get("default_views", ["iso"])
+        render_views = self._resolve_render_views(render_views)
 
         thumbnails_created = []
         for view_name in render_views:

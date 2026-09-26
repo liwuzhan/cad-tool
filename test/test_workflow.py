@@ -144,3 +144,51 @@ def test_build_multiple_commits(package):
 
     # Manifest HEAD should be the last one
     assert package.get_manifest().head == hashes[-1]
+
+
+def test_build_without_commit_still_renders_requested_views(package):
+    """A look at the working state must not require committing it.
+
+    `cad build --views=...` used to accept the option and silently render
+    nothing, and because render/inspect/validate all require a commit there was
+    then no way to see a model before committing it — which inverts the natural
+    loop and pushes throwaway commits (and their assertion deltas) into history.
+    """
+
+    workflow = BuildWorkflow(package)
+    record, error = workflow.build(
+        script_path=package.get_default_script(),
+        commit_message=None,
+        render_views=["iso", "top"],
+    )
+
+    assert error is None
+    assert record is None, "a build without a message must not create a commit"
+    assert package.manifest_manager.metadata.head is None
+
+    for view in ("iso", "top"):
+        image = package.runlog_dir / f"render_{view}.png"
+        assert image.exists(), f"{view} render missing"
+        assert image.stat().st_size > 0
+
+
+def test_build_without_commit_rejects_unknown_views_without_failing(package):
+    workflow = BuildWorkflow(package)
+    record, error = workflow.build(
+        script_path=package.get_default_script(),
+        commit_message=None,
+        render_views=["not_a_view"],
+    )
+    assert error is None
+    assert record is None
+
+
+def test_build_without_views_renders_nothing(package):
+    workflow = BuildWorkflow(package)
+    record, error = workflow.build(
+        script_path=package.get_default_script(),
+        commit_message=None,
+        render_views=[],
+    )
+    assert error is None
+    assert not list(package.runlog_dir.glob("render_*.png"))
