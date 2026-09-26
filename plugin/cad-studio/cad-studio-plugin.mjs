@@ -167,7 +167,12 @@ const metricsSchema = {
 const freeObject = { type: "object" };
 
 export const name = "cad-studio";
-export const inject = ["tools"];
+// cordis 只保证 inject 中列出的服务在 apply() 前就绪。apply() 里用 ctx.get() 取到的
+// 服务会固化进闭包，取不到就永远是 undefined（DSH 0.1.7 实测：不声明 subprocess 时
+// 每次调用都报「subprocess 服务不可用」）。
+// 不要在此声明 sandboxPolicy：apply() 时它尚未注册，声明它会让本插件永远等不到而
+// 完全不加载（已实测二分确认）；它改为在 confineArgv 中按调用惰性解析。sandbox 同理。
+export const inject = ["tools", "subprocess"];
 
 export default {
   inject,
@@ -177,6 +182,13 @@ export default {
     const sandbox = ctx.get("sandbox");
     const sandboxPolicy = ctx.get("sandboxPolicy");
     const jobs = ctx.get("jobs");
+    // subprocess 由 inject 保证就绪；sandbox/jobs 在 apply() 时通常已可用。
+    // sandboxPolicy 在本阶段常态性地尚未注册，由 confineArgv 按调用惰性解析，故不参与告警。
+    const missingServices = [["subprocess", subprocess], ["sandbox", sandbox], ["jobs", jobs]]
+      .filter(([, value]) => value === undefined).map(([n]) => n);
+    if (missingServices.length > 0) {
+      ctx.logger?.warn?.(`cad-studio: 服务未就绪 [${missingServices.join(", ")}]，相关工具将不可用`);
+    }
     config = config || {};
     const LOCK_TIMEOUT_MS = Math.max(num(config.lockTimeoutMs, 30000), 100);
     const LOCK_STALE_MS = Math.max(num(config.lockStaleMs, 300000), LOCK_TIMEOUT_MS);
@@ -238,12 +250,17 @@ export default {
 
     /** ctx.sandbox 包装 argv；服务缺失时原样通过（subprocess 服务仍是执行边界）。 */
     function confineArgv(argv, session) {
-      if (!sandbox || !sandboxPolicy) return { argv: [...argv], mode: "unconfined" };
+      // sandboxPolicy 在 apply() 时尚未注册（DSH 0.1.7 实测），必须按调用惰性解析；
+      // 若沿用 apply() 时捕获的 undefined，本函数会静默降级为 unconfined，
+      // 丢掉当前会话的沙箱约束却毫无提示。
+      const sandboxService = sandbox ?? ctx.get("sandbox");
+      const policyService = sandboxPolicy ?? ctx.get("sandboxPolicy");
+      if (!sandboxService || !policyService) return { argv: [...argv], mode: "unconfined" };
       let policy;
-      try { policy = session ? sandboxPolicy.resolve({ session }) : sandboxPolicy.resolve(); } catch { policy = null; }
+      try { policy = session ? policyService.resolve({ session }) : policyService.resolve(); } catch { policy = null; }
       if (!policy || policy.mode === "danger-full-access") return { argv: [...argv], mode: policy ? policy.mode : "unconfined" };
       try {
-        const wrapped = sandbox.confine(argv, policy);
+        const wrapped = sandboxService.confine(argv, policy);
         return { argv: wrapped.argv, mode: policy.mode, enforcement: wrapped.enforcement };
       } catch (e) {
         throw new CadError(

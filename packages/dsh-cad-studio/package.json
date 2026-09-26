@@ -1,6 +1,6 @@
 {
   "name": "dsh-cad-studio",
-  "version": "0.1.0-alpha.5",
+  "version": "0.1.0-alpha.7",
   "description": "DSH plugin for AI-driven parametric CAD modeling, validation, rendering, versioning, and STEP/STL export",
   "type": "module",
   "main": "lib/index.js",
@@ -20,6 +20,7 @@
     "cordis.patch.yml",
     "screenshots.json",
     "assets/*.png",
+    "skills",
     "README.md",
     "CHANGELOG.md",
     "LICENSE",
@@ -62,6 +63,12 @@
     "@deepseek-ai/cordis": "^4.0.1",
     "@deepseek-ai/dsh-client-runtime": ">=0.1.0-rc.1 <0.1.0 || >=0.1.0-rc.1 <0.2.0-0",
     "@deepseek-ai/dsh-client-ui-tool": ">=0.1.0-rc.1 <0.1.0 || >=0.1.0-rc.1 <0.2.0-0",
-    "@deepseek-ai/dsh-client-ui-conversation": ">=0.1.0-rc.1 <0.1.0 || >=0.1.0-rc.1 <0.2.0-0"
+    "@deepseek-ai/dsh-client-ui-conversation": ">=0.1.0-rc.1 <0.1.0 || >=0.1.0-rc.1 <0.2.0-0",
+    "@deepseek-ai/dsh-skill-filesystem": ">=0.1.1-rc.1 <0.1.1 || >=0.1.1 <0.2.0-0"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/dsh-skill-filesystem": {
+      "optional": true
+    }
   }
 }

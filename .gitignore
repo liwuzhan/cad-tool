@@ -34,6 +34,9 @@ htmlcov/
 *.stl
 *.obj
 
+# npm pack output (build artifact; distribute via GitHub releases, not git)
+*.tgz
+
 # Model package runtime state (artifacts' JSON/thumbs ARE tracked)
 **/*.456d/runlog/
 **/*.456d/.deps/

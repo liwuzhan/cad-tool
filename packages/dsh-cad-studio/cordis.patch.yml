@@ -3,3 +3,15 @@
 - insert:
     - id: cad-studio
       name: dsh-cad-studio
+
+    # DSH 0.1.7 dropped directory-based agent presets (~/.dsh/.agent-presets/),
+    # which is where the CAD skills used to live. Register them from inside the
+    # package instead. A separate provider name keeps them merged alongside the
+    # profile's ordinary skill roots rather than replacing them.
+    - id: cad-skills
+      name: '@deepseek-ai/dsh-skill-filesystem'
+      config:
+        providerName: cad-studio
+        includeDefaultRoots: false
+        customSkillDirs:
+          - !!js "process.getBuiltinModule('node:url').fileURLToPath(new URL('node_modules/dsh-cad-studio/skills/', baseUrl))"
