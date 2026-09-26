@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-alpha.9 (2026-09-26)
+
+- Move "which layer surfaces which kind of error" into the `cad-modeling` skill,
+  where it belongs, instead of encoding a responsibility map into `cad mates`
+  output. Tool output stays factual — what the check does and does not decide —
+  and the judgement about where to look next stays with the model. This also
+  keeps the skill consistent with its own stated principle that these are
+  capabilities rather than a mandatory pipeline.
+
 ## 0.1.0-alpha.8 (2026-09-26)
 
 - Document the declarative shaft generator in the `cad-modeling` skill. The
