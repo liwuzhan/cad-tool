@@ -1,0 +1,27 @@
+{
+  "name": "Declarative stepped shaft (bearing-sized seats)",
+  "kind": "part",
+  "version": "2.0.0",
+  "created": "2026-09-26T20:41:20.509279",
+  "head": "379fe67b9de0",
+  "branches": {
+    "main": "379fe67b9de0"
+  },
+  "current_branch": "main",
+  "artifact_policy": "latest_per_branch",
+  "unit": "mm",
+  "timeout_seconds": 60,
+  "render": {
+    "default_views": [
+      "top",
+      "front",
+      "right",
+      "iso"
+    ],
+    "image_format": "png",
+    "resolution": [
+      800,
+      600
+    ]
+  }
+}

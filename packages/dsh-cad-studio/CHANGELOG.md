@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.8 (2026-09-26)
+
+- Document the declarative shaft generator in the `cad-modeling` skill. The
+  generator is not a catalogue family (a shaft is a design artefact derived from
+  what mounts on it, not a catalogue part), so `cadparts search` cannot surface
+  it; without this the capability is unreachable for a model that only knows the
+  discovery path.
+
 ## 0.1.0-alpha.7 (2026-09-26)
 
 - Fix every `cad_*` tool failing with "subprocess 服务不可用" on DSH 0.1.7. The

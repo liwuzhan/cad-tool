@@ -1,0 +1,2 @@
+{"hash": "036e7dbdbb8a", "message": "声明式阶梯轴：轴颈尺寸由所装轴承接口推导，改型号即跟随", "timestamp": "2026-09-26T20:42:21.626218", "script_path": "src/main.py", "parent_hash": null, "branch": "main", "metrics_hash": null, "has_step": true, "has_thumbnails": true}
+{"hash": "379fe67b9de0", "message": "轴生成器 demo：改用几何实测作为外部真值检查（原接口比对是循环的）", "timestamp": "2026-09-26T20:44:08.750365", "script_path": "src/main.py", "parent_hash": "036e7dbdbb8a", "branch": "main", "metrics_hash": null, "has_step": true, "has_thumbnails": true}

@@ -23,6 +23,28 @@ description: 使用 CAD 工场工具创建、装配、查看、保存或导出 b
 标准件库存在时，可在当前平台 shell 中运行 `cadparts search/compare/describe`；没有它也不影响
 普通 CAD。工具目录是默认省力入口，不禁止模型查看库源码或采取其他合理方法。
 
+## 声明式轴（非标件优先用它）
+
+标准件库还提供轴生成器：`cadparts.Seat` / `Free` / `ShaftSpec` / `shaft_dimensions` /
+`stepped_shaft`。用法是**声明装配关系，不写轴颈尺寸**：
+
+```python
+spec = ShaftSpec(stations=(
+    Seat("bearing.deep_groove", {"code": "6204"}, "shaft_bore", role="support_a"),
+    Free(26.0, 22.0, role="spacer"),          # 无库件依据的段才显式给尺寸
+    Seat("bearing.deep_groove", {"code": "6204"}, "shaft_bore", role="support_b"),
+))
+derived = shaft_dimensions(spec)   # 直径/长度/轴向链/轴肩全部推导出来
+result = stepped_shaft(spec)       # 半剖轮廓回转成单一实体
+```
+
+`Seat` 的直径与长度来自所引用库件接口（轴承 `shaft_bore` → 轴颈），所以换一个轴承型号，
+整根轴连同轴向链和轴肩位置一起跟随。`Free` 只用于确实没有库件依据的段。
+
+轴颈**不建模配合公差**：`diameter_delta` 是调用者显式给的余量，发射的名义直径恒为名义值。
+键槽、挡圈槽、倒角、螺纹与材料同样不在范围内。轴是最容易形式化的一类非标件，优先用生成器
+而不是手画回转轮廓。
+
 ## 最少约定
 
 - 可编辑几何通常在 `<name>.456d/src/main.py`，最终 build123d 对象赋给 `result`。
