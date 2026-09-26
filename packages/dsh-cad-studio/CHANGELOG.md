@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.10 (2026-09-26)
+
+- Report `NOTHING_TO_CHECK` instead of `PASS` when a package declares ports but
+  no mates. Found by inspecting a package with six declared ports and zero
+  mates: it reported `overall: PASS`, the most misleading thing a checker can
+  emit, because a reader sees the word and stops looking.
+- Document the new verdict in the `cad-modeling` skill.
+
 ## 0.1.0-alpha.9 (2026-09-26)
 
 - Move "which layer surfaces which kind of error" into the `cad-modeling` skill,

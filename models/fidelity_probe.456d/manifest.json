@@ -1,0 +1,29 @@
+{
+  "name": "Fidelity probe: declared vs actual bore",
+  "kind": "part",
+  "version": "2.0.0",
+  "created": "2026-09-27T03:02:21.063493",
+  "head": null,
+  "branches": {
+    "main": null
+  },
+  "current_branch": "main",
+  "artifact_policy": "latest_per_branch",
+  "unit": "mm",
+  "timeout_seconds": 60,
+  "deps": [],
+  "mates": [],
+  "render": {
+    "default_views": [
+      "top",
+      "front",
+      "right",
+      "iso"
+    ],
+    "image_format": "png",
+    "resolution": [
+      800,
+      600
+    ]
+  }
+}

@@ -63,7 +63,7 @@ result = stepped_shaft(spec)       # 半剖轮廓回转成单一实体
 PORTS = {"shaft": resolve_interfaces("shaft.stepped", {}, shaft_dimensions(SPEC))}
 ```
 
-判定结果为**四档**，`UNKNOWN` 是一等结果而不是静默通过：
+判定结果分**五档**，`UNKNOWN` 与 `NOTHING_TO_CHECK` 都是一等结果，不静默通过：
 
 | 判决 | 含义 |
 |---|---|
@@ -71,6 +71,10 @@ PORTS = {"shaft": resolve_interfaces("shaft.stepped", {}, shaft_dimensions(SPEC)
 | `WARN` | 装得上但公称尺寸不符（可能是间隙配合，也可能选错件——仅凭声明无法判定）|
 | `FAIL` | 装不进去 / 声明本身有错（引用不存在的实例或接口）|
 | `UNKNOWN` | 没有适用于该类型组合的规则，此项**未被验证** |
+| `NOTHING_TO_CHECK` | **一条 mate 都没有**，什么都没比过 |
+
+最后一条要特别注意：包里声明了接口却没写任何 mate 时，结果是 `NOTHING_TO_CHECK`
+而**不是** `PASS`。空泛的通过是最有害的输出——读者看到「通过」就不再往下看了。
 
 输出还含**覆盖率**（哪些已声明接口没有任何 mate 引用，逐个列出）与**验证边界**
 （明说未查公差、强度、工艺、可达性）。**不要把 `PASS` 读成「全都验过了」。**
