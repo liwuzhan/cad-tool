@@ -2,7 +2,16 @@
 
 ## 渲染图
 
-- top: `/Users/liwuzhan/Desktop/cad tools v2/wheel_hub.456d/runlog/review_top.png`
+- iso: `/Users/liwuzhan/Desktop/cad tools v2/models/wheel_hub.456d/runlog/review_iso.png`
+- front: `/Users/liwuzhan/Desktop/cad tools v2/models/wheel_hub.456d/runlog/review_front.png`
+- top: `/Users/liwuzhan/Desktop/cad tools v2/models/wheel_hub.456d/runlog/review_top.png`
+- right: `/Users/liwuzhan/Desktop/cad tools v2/models/wheel_hub.456d/runlog/review_right.png`
+
+## 按需审查图
+
+> 以下尺寸、标注和剖切由模型主动指定，只提供观察证据，不作合格判定。
+
+- radial_filled2 (front): PNG `/Users/liwuzhan/Desktop/cad tools v2/models/wheel_hub.456d/runlog/review_drawing_radial_filled2.png` · SVG `/Users/liwuzhan/Desktop/cad tools v2/models/wheel_hub.456d/runlog/review_drawing_radial_filled2.svg` · 数据 `/Users/liwuzhan/Desktop/cad tools v2/models/wheel_hub.456d/runlog/review_drawing_radial_filled2.json`
 
 ## 几何指标
 
@@ -11,6 +20,7 @@
 - 面数: 125
 - 边数: 305
 - 顶点数: 180
+- 实体数: 1
 - 边界框: X[-230.0, 230.0] Y[-230.0, 230.0] Z[-170.0, 14.0]
 - 外形尺寸: 460.0 x 460.0 x 184.0 mm
 
@@ -36,6 +46,7 @@
 Overall size: X=460.0 x Y=460.0 x Z=184.0 mm
 Bounding box: X[-230.0..230.0]  Y[-230.0..230.0]  Z[-170.0..14.0]
 Volume: 9100415.42 mm³
+Solids: 1
 Total faces: 125
 
 --- Face Type Breakdown ---

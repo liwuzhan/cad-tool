@@ -1,0 +1,46 @@
+{
+  "name": "probe_resize",
+  "kind": "assembly",
+  "version": "2.1.0",
+  "created": "2026-09-26T21:02:54.937210",
+  "head": "d8ba9b72f37f",
+  "branches": {
+    "main": "d8ba9b72f37f"
+  },
+  "current_branch": "main",
+  "artifact_policy": "latest_per_branch",
+  "unit": "mm",
+  "timeout_seconds": 60,
+  "deps": [
+    {
+      "name": "bearing_a",
+      "std": {
+        "family": "bearing.deep_groove",
+        "params": {
+          "code": "6305"
+        },
+        "lib": "0.2.0"
+      }
+    }
+  ],
+  "mates": [
+    {
+      "a": "shaft.seat_support_a",
+      "b": "bearing_a.shaft_bore",
+      "why": "轴颈 support_a 由该轴承的轴孔尺寸决定"
+    }
+  ],
+  "render": {
+    "default_views": [
+      "top",
+      "front",
+      "right",
+      "iso"
+    ],
+    "image_format": "png",
+    "resolution": [
+      800,
+      600
+    ]
+  }
+}

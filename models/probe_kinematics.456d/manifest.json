@@ -1,0 +1,29 @@
+{
+  "name": "MGN12 rail + carriage + end stop kinematics probe",
+  "kind": "assembly",
+  "version": "2.0.0",
+  "created": "2026-09-27T03:43:27.345884",
+  "head": "6adb2e38f2d6",
+  "branches": {
+    "main": "6adb2e38f2d6"
+  },
+  "current_branch": "main",
+  "artifact_policy": "latest_per_branch",
+  "unit": "mm",
+  "timeout_seconds": 60,
+  "deps": [],
+  "mates": [],
+  "render": {
+    "default_views": [
+      "top",
+      "front",
+      "right",
+      "iso"
+    ],
+    "image_format": "png",
+    "resolution": [
+      800,
+      600
+    ]
+  }
+}
