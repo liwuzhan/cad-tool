@@ -193,6 +193,53 @@ def _apply_section(shape: Shape, raw: Any, field: str) -> tuple[Shape, dict[str,
     return clipped, {"origin": list(origin), "normal": list(normal), "keep": keep_name}
 
 
+def _section_fill_polygons(
+    working_shape: Shape,
+    section: dict[str, Any] | None,
+    *,
+    target: tuple[float, float, float],
+    screen_right: tuple[float, float, float],
+    screen_up: tuple[float, float, float],
+    tolerance: float = 1e-6,
+) -> list[list[list[float]]]:
+    """Triangulate the faces a cut created, projected, ready to be filled.
+
+    A section without fill is a set of outlines: the reader cannot tell material
+    from void, which is the only reason to cut a part open in the first place.
+    Faces are triangulated rather than polygonised so pockets and islands come
+    out right without wire-chaining.
+    """
+
+    if not section:
+        return []
+    origin = tuple(section["origin"])
+    normal = _unit(tuple(section["normal"]), "section.normal")
+    polygons: list[list[list[float]]] = []
+    for face in working_shape.faces():
+        if getattr(getattr(face, "geom_type", None), "name", "") != "PLANE":
+            continue
+        try:
+            face_normal = _tuple(face.normal_at())
+            center = _tuple(face.center())
+        except Exception:
+            continue
+        if abs(abs(_dot(face_normal, normal)) - 1.0) > 1e-6:
+            continue
+        if abs(_dot(_sub(center, origin), normal)) > 1e-4:
+            continue
+        try:
+            vertices, triangles = face.tessellate(tolerance)
+        except Exception:
+            continue
+        projected = [
+            _project_point(_tuple(vertex), target, screen_right, screen_up)
+            for vertex in vertices
+        ]
+        for triangle in triangles:
+            polygons.append([list(projected[index]) for index in triangle])
+    return polygons
+
+
 def _edge_points(edge: Shape, samples: int = 40) -> tuple[list[float], list[float]]:
     points: list[Vector] = []
     try:
@@ -280,6 +327,146 @@ def _normalize_callouts(
     return callouts
 
 
+def _port_axis(port: dict[str, Any]) -> tuple[float, float, float] | None:
+    raw = (port.get("frame") or {}).get("axis")
+    try:
+        return _unit((float(raw[0]), float(raw[1]), float(raw[2])), "axis")
+    except (TypeError, ValueError, ReviewDrawingError):
+        return None
+
+
+def _port_origin(port: dict[str, Any]) -> tuple[float, float, float] | None:
+    raw = (port.get("frame") or {}).get("origin_mm")
+    try:
+        return (float(raw[0]), float(raw[1]), float(raw[2]))
+    except (TypeError, ValueError):
+        return None
+
+
+# A declared origin sits on the feature's own axis for every cylindrical port
+# type, so "axis parallel AND origin on that axis" identifies the feature by
+# position and orientation only — never by the size we are about to measure,
+# which would make the comparison circular.
+_AXIS_PARALLEL_TOL = 1e-3
+_ORIGIN_ON_AXIS_TOL_MM = 0.5
+
+_CYLINDRICAL_PORT_TYPES = {
+    "cylindrical_bore",
+    "cylindrical_surface",
+    "clearance_hole",
+    "male_shaft",
+}
+
+
+def measure_declared_port(shape: Shape, port: dict[str, Any]) -> dict[str, Any]:
+    """Measure the geometry a declared port claims, without using the claim.
+
+    Returns ``{"declared_mm": float|None, "measured_mm": [float, ...], "note": str}``.
+    Every candidate is reported rather than the best-matching one: picking the
+    closest value would make the reading a restatement of the declaration.
+    """
+
+    port_type = str(port.get("type") or "")
+    declared = (port.get("dimensions_mm") or {}).get("diameter")
+    declared_mm = float(declared) if isinstance(declared, (int, float)) else None
+    result: dict[str, Any] = {"declared_mm": declared_mm, "measured_mm": [], "note": ""}
+
+    if port_type not in _CYLINDRICAL_PORT_TYPES:
+        result["note"] = "no measurement rule for this port type"
+        return result
+
+    axis = _port_axis(port)
+    origin = _port_origin(port)
+    if axis is None or origin is None:
+        result["note"] = "declaration has no usable frame"
+        return result
+
+    from OCP.BRepAdaptor import BRepAdaptor_Surface
+
+    measured: list[float] = []
+    for face in shape.faces():
+        if getattr(getattr(face, "geom_type", None), "name", "") != "CYLINDER":
+            continue
+        try:
+            cylinder = BRepAdaptor_Surface(face.wrapped).Cylinder()
+        except Exception:
+            continue
+        face_axis = cylinder.Axis().Direction()
+        face_dir = (face_axis.X(), face_axis.Y(), face_axis.Z())
+        cross = _cross(face_dir, axis)
+        if _length(cross) > _AXIS_PARALLEL_TOL:
+            continue
+        location = cylinder.Axis().Location()
+        to_origin = _sub(origin, (location.X(), location.Y(), location.Z()))
+        along = _dot(to_origin, axis)
+        perpendicular = _sub(to_origin, _scale(axis, along))
+        if _length(perpendicular) > _ORIGIN_ON_AXIS_TOL_MM:
+            continue
+        measured.append(round(float(cylinder.Radius()) * 2.0, 6))
+
+    result["measured_mm"] = sorted(set(measured))
+    if not measured:
+        result["note"] = "no matching cylindrical face"
+    elif len(result["measured_mm"]) > 1:
+        result["note"] = f"{len(result['measured_mm'])} coaxial candidates"
+    return result
+
+
+def annotate_declared_ports(
+    shape: Shape,
+    instances: dict[str, list[dict[str, Any]]],
+    *,
+    target: tuple[float, float, float],
+    screen_right: tuple[float, float, float],
+    screen_up: tuple[float, float, float],
+    index_offset: int = 0,
+) -> list[dict[str, Any]]:
+    """Build callouts that put each declaration next to its measurement.
+
+    Text stays ASCII and short: the drawing must render identically on headless
+    hosts where the preferred font may be missing.
+    """
+
+    callouts: list[dict[str, Any]] = []
+    row = index_offset
+    for instance, ports in sorted(instances.items()):
+        for port in ports:
+            origin = _port_origin(port)
+            if origin is None:
+                continue
+            reading = measure_declared_port(shape, port)
+            declared, measured = reading["declared_mm"], reading["measured_mm"]
+            head = f"{instance}.{port.get('id')}"
+            # Short and factual: the declaration, then what the geometry says.
+            # No verdict word — "equal" and "differs" are both just readings.
+            if declared is None:
+                text = f"{head}: n/a"
+            elif not measured:
+                text = f"{head}: {declared:g}? {reading['note']}"
+            else:
+                shown = ",".join(f"{value:g}" for value in measured)
+                delta = measured[0] - declared
+                text = f"{head}: {declared:g} -> {shown}"
+                if abs(delta) > 1e-9:
+                    text += f"  ({delta:+g})"
+                if len(measured) > 1:
+                    text += f"  [{reading['note']}]"
+            # Alternate sides so leader lines fan out instead of stacking into a
+            # column that walks off the sheet and crosses every other leader.
+            side = 1.0 if row % 2 == 0 else -1.0
+            callouts.append({
+                "id": f"port_{head}",
+                "at": list(origin),
+                "at_2d": list(_project_point(origin, target, screen_right, screen_up)),
+                "offset_mm": [16.0 * side, 16.0 * side],
+                "text": text,
+                "declared_mm": declared,
+                "measured_mm": measured,
+            })
+            row += 1
+    return callouts
+
+
 def _write_svg(
     path: Path,
     visible: Iterable[Shape],
@@ -334,6 +521,7 @@ def _write_png(
     *,
     show_hidden: bool,
     title: str,
+    fills: list[list[list[float]]] | None = None,
 ) -> None:
     try:
         import matplotlib
@@ -344,6 +532,20 @@ def _write_png(
         raise ImportError("matplotlib is required for annotated review PNGs") from exc
 
     figure, axis = plt.subplots(figsize=(10, 7.5), dpi=140)
+    # Cut faces go down first so the outlines read on top of them.
+    if fills:
+        from matplotlib.collections import PolyCollection
+
+        axis.add_collection(
+            PolyCollection(
+                fills,
+                facecolors="#c8ced8",
+                edgecolors="none",
+                linewidths=0,
+                antialiased=False,   # kill the seams between adjacent triangles
+                zorder=0,
+            )
+        )
     for edge in hidden if show_hidden else []:
         xs, ys = _edge_points(edge)
         if len(xs) >= 2:
@@ -413,8 +615,15 @@ def render_review_drawings(
     output_dir: Path,
     *,
     source_commit: str | None = None,
+    declared_ports: dict[str, list[dict[str, Any]]] | None = None,
 ) -> list[dict[str, Any]]:
-    """Generate model-directed annotated SVG/PNG views and neutral readings."""
+    """Generate model-directed annotated SVG/PNG views and neutral readings.
+
+    When ``spec['annotate_ports']`` is set and the package declares ports, every
+    declared interface is measured and drawn beside its declaration. The caller
+    supplies no coordinates, and the renderer still makes no judgement: it only
+    reports what the geometry says next to what the declaration claims.
+    """
 
     if spec.get("schema", SCHEMA) != SCHEMA:
         raise ReviewDrawingError(f"unsupported drawing schema: {spec.get('schema')}")
@@ -464,6 +673,18 @@ def render_review_drawings(
             screen_up=screen_up,
             field=f"{field}.callouts",
         )
+        # Declared ports are annotated on request. They are measured against the
+        # whole part, not the sectioned copy: a declaration describes the part,
+        # not the cut we happen to be looking at.
+        if spec.get("annotate_ports") and declared_ports:
+            callouts = callouts + annotate_declared_ports(
+                shape,
+                declared_ports,
+                target=target,
+                screen_right=screen_right,
+                screen_up=screen_up,
+                index_offset=len(callouts),
+            )
         show_hidden = bool(raw_view.get("hidden_lines", True))
         span = max(_bbox_dict(shape)["size"] + [1.0])
         title = str(raw_view.get("title") or f"{base_title} · {requested_name}")
@@ -488,6 +709,13 @@ def render_review_drawings(
             callouts,
             show_hidden=show_hidden,
             title=title,
+            fills=_section_fill_polygons(
+                working_shape,
+                section,
+                target=target,
+                screen_right=screen_right,
+                screen_up=screen_up,
+            ),
         )
 
         metadata = {

@@ -9,7 +9,7 @@ import click
 from build123d import Shape
 
 from .package import ModelPackage
-from .package.mates import MateCheckError, check_package
+from .package.mates import PORTS_FILENAME, MateCheckError, check_package, load_declared_ports
 from .vcs.repository_v2 import Repository
 from .vcs.commits import CommitHistory
 from .runtime.executor_v2 import ScriptExecutorV2
@@ -629,11 +629,17 @@ def review(script_path, views, text_only, commit_hash, drawing_spec, drawing_spe
     if drawing_spec or drawing_spec_json:
         try:
             spec = load_drawing_spec(path=drawing_spec, json_text=drawing_spec_json)
+            declared_ports = None
+            if spec.get("annotate_ports") and (package.package_path / PORTS_FILENAME).exists():
+                # Reading the declaration is geometry-free; measuring it against
+                # the built shape is what the drawing adds.
+                declared_ports, _ = load_declared_ports(package.package_path)
             drawings = render_review_drawings(
                 shape,
                 spec,
                 package.runlog_dir,
                 source_commit=commit_hash,
+                declared_ports=declared_ports,
             )
         except Exception as exc:
             emit_event("review_error", {"message": str(exc)})
